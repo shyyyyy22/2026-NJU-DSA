@@ -52,6 +52,43 @@ public:
     void reSize(int newSize);
     SeqList<T> &operator=(const SeqList<T> &L);
 };
+
+template <typename T>
+class SinglyLinkedList : public LinearList<T>
+{
+private:
+    typedef struct Node
+    {
+        T data;
+        Node *next;
+    } Node;
+    Node *head;
+
+public:
+    SinglyLinkedList();
+    SinglyLinkedList(const SinglyLinkedList<T> &L);
+    ~SinglyLinkedList();
+
+    int Size() const override;
+    int Length() const override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int Search(const T &x) const override;
+    int Locate(int i) const override;
+    T *getData(int i) const override;
+    void setData(int i, const T &x) override;
+    bool Insert(int i, const T &x) override;
+    bool Remove(int i, T &x) override;
+    void Sort() override;
+    void Input() override;
+    void Output() override;
+
+    void pushFront(const T &x);
+    void pushBack(const T &x);
+    void removeFront();
+    void removeBack();
+    SinglyLinkedList<T> &operator=(const SinglyLinkedList<T> &L);
+};
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
 SeqList<T>::SeqList(int size)
@@ -206,23 +243,6 @@ void SeqList<T>::Output()
     }
 }
 template <typename T>
-SeqList<T> &SeqList<T>::operator=(const SeqList<T> &L)
-{
-    if (this == &L)
-    {
-        return *this;
-    }
-    delete[] data;
-    maxSize = L.maxSize;
-    last = L.last;
-    data = new T[maxSize];
-    for (int i = 0; i < last; i++)
-    {
-        data[i] = L.data[i];
-    }
-    return *this;
-}
-template <typename T>
 void SeqList<T>::reSize(int newSize)
 {
     if (newSize <= 0)
@@ -240,6 +260,286 @@ void SeqList<T>::reSize(int newSize)
     data = newData;
     maxSize = newSize;
     last = newLast;
+}
+template <typename T>
+SeqList<T> &SeqList<T>::operator=(const SeqList<T> &L)
+{
+    if (this == &L)
+    {
+        return *this;
+    }
+    delete[] data;
+    maxSize = L.maxSize;
+    last = L.last;
+    data = new T[maxSize];
+    for (int i = 0; i < last; i++)
+    {
+        data[i] = L.data[i];
+    }
+    return *this;
+}
+#endif
+#ifdef DS_SINGLYLINKEDLIST_IMPLEMENTATION
+template <typename T>
+SinglyLinkedList<T>::SinglyLinkedList()
+{
+    head = new Node;
+    head->next = nullptr;
+}
+template <typename T>
+SinglyLinkedList<T>::SinglyLinkedList(const SinglyLinkedList<T> &L)
+{
+    head = new Node;
+    head->next = nullptr;
+    Node *p = L.head->next;
+    Node *q = head;
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+        q->next = nullptr;
+    }
+}
+template <typename T>
+SinglyLinkedList<T>::~SinglyLinkedList()
+{
+    Node *p = head->next;
+    while (p != nullptr)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    delete head;
+}
+template <typename T>
+int SinglyLinkedList<T>::Size() const
+{
+    int sz = 0;
+    Node *p = head->next;
+    while (p != nullptr)
+    {
+        sz++;
+        p = p->next;
+    }
+    return sz;
+}
+template <typename T>
+int SinglyLinkedList<T>::Length() const
+{
+    return Size();
+}
+template <typename T>
+bool SinglyLinkedList<T>::IsEmpty() const
+{
+    return head->next == nullptr;
+}
+template <typename T>
+bool SinglyLinkedList<T>::IsFull() const
+{
+    return false;
+}
+template <typename T>
+int SinglyLinkedList<T>::Search(const T &x) const
+{
+    Node *p = head->next;
+    int i = 1;
+    while (p != nullptr)
+    {
+        if (p->data == x)
+        {
+            return i;
+        }
+        p = p->next;
+        i++;
+    }
+    return 0;
+}
+template <typename T>
+int SinglyLinkedList<T>::Locate(int i) const
+{
+    if (i < 1 || i > Size())
+    {
+        return 0;
+    }
+    return i;
+}
+template <typename T>
+T *SinglyLinkedList<T>::getData(int i) const
+{
+    if (i < 1 || i > Size())
+    {
+        return nullptr;
+    }
+    Node *p = head->next;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    return &p->data;
+}
+template <typename T>
+void SinglyLinkedList<T>::setData(int i, const T &x)
+{
+    if (i < 1 || i > Size())
+    {
+        return;
+    }
+    Node *p = head->next;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    p->data = x;
+    return;
+}
+template <typename T>
+bool SinglyLinkedList<T>::Insert(int i, const T &x)
+{
+    if (i < 1 || i > Size() + 1)
+    {
+        return false;
+    }
+    Node *p = head;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->next = p->next;
+    p->next = newNode;
+    return true;
+}
+template <typename T>
+bool SinglyLinkedList<T>::Remove(int i, T &x)
+{
+    if (i < 1 || i > Size())
+    {
+        return false;
+    }
+    Node *p = head;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    Node *delNode = p->next;
+    x = delNode->data;
+    p->next = delNode->next;
+    delete delNode;
+    return true;
+}
+template <typename T>
+void SinglyLinkedList<T>::Sort()
+{
+    if (IsEmpty())
+    {
+        return;
+    }
+    for (Node *p = head->next; p != nullptr; p = p->next)
+    {
+        for (Node *q = p->next; q != nullptr; q = q->next)
+        {
+            if (p->data > q->data)
+            {
+                std::swap(p->data, q->data);
+            }
+        }
+    }
+}
+template <typename T>
+void SinglyLinkedList<T>::Input()
+{
+    std::cout << "Input the length of the list: ";
+    int len;
+    std::cin >> len;
+    while (len < 0)
+    {
+        std::cout << "The length is negative, please input again: ";
+        std::cin >> len;
+    }
+    for (int i = 0; i < len; i++)
+    {
+        T x;
+        std::cout << "Input the " << i + 1 << "th element: ";
+        std::cin >> x;
+        pushBack(x);
+    }
+}
+template <typename T>
+void SinglyLinkedList<T>::Output()
+{
+    std::cout << "The length of the list is: " << Size() << std::endl;
+    Node *p = head->next;
+    int i = 1;
+    while (p != nullptr)
+    {
+        std::cout << "The " << i << "th element is: " << p->data << std::endl;
+        p = p->next;
+        i++;
+    }
+}
+template <typename T>
+void SinglyLinkedList<T>::pushFront(const T &x)
+{
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->next = head->next;
+    head->next = newNode;
+}
+template <typename T>
+void SinglyLinkedList<T>::pushBack(const T &x)
+{
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->next = nullptr;
+    Node *p = head;
+    while (p->next != nullptr)
+    {
+        p = p->next;
+    }
+    p->next = newNode;
+}
+template <typename T>
+void SinglyLinkedList<T>::removeFront()
+{
+    T x;
+    Remove(1, x);
+}
+template <typename T>
+void SinglyLinkedList<T>::removeBack()
+{
+    T x;
+    Remove(Size(), x);
+}
+template <typename T>
+SinglyLinkedList<T> &SinglyLinkedList<T>::operator=(const SinglyLinkedList<T> &L)
+{
+    if (this == &L)
+    {
+        return *this;
+    }
+    Node *p = head->next;
+    while (p != nullptr)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    head->next = nullptr;
+    p = L.head->next;
+    Node *q = head;
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    q->next = nullptr;
+    return *this;
 }
 #endif
 #endif // DATASTRUCTURE
