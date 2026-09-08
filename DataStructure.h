@@ -125,6 +125,45 @@ public:
     bool isCircular() const;
     CircularLinkedList<T> &operator=(const CircularLinkedList<T> &L);
 };
+template <typename T>
+class DoublyLinkedList : public LinearList<T>
+{
+private:
+    typedef struct Node
+    {
+        T data;
+        Node *prev;
+        Node *next;
+    } Node;
+    Node *head;
+
+public:
+    DoublyLinkedList();
+    DoublyLinkedList(const DoublyLinkedList<T> &L);
+    ~DoublyLinkedList();
+
+    int Size() const override;
+    int Length() const override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int Search(const T &x) const override;
+    int Locate(int i) const override;
+    T *getData(int i) const override;
+    void setData(int i, const T &x) override;
+    bool Insert(int i, const T &x) override;
+    bool Remove(int i, T &x) override;
+    void Sort() override;
+    void Input() override;
+    void Output() override;
+
+    void pushFront(const T &x);
+    void pushBack(const T &x);
+    void removeFront();
+    void removeBack();
+    void OutputReverse();
+    void reverseList();
+    DoublyLinkedList<T> &operator=(const DoublyLinkedList<T> &L);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -850,6 +889,310 @@ CircularLinkedList<T> &CircularLinkedList<T>::operator=(const CircularLinkedList
         p = p->next;
     }
     tail = q;
+    q->next = head;
+    return *this;
+}
+#endif
+#ifdef DS_DOUBLYLINKEDLIST_IMPLEMENTATION
+template <typename T>
+DoublyLinkedList<T>::DoublyLinkedList()
+{
+    head = new Node;
+    head->prev = head;
+    head->next = head;
+}
+template <typename T>
+DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList<T> &L)
+{
+    head = new Node;
+    head->prev = head;
+    head->next = head;
+    Node *p = L.head->next;
+    Node *q = head;
+    while (p != L.head)
+    {
+        q->next = new Node;
+        q->next->prev = q;
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    head->prev = q;
+    q->next = head;
+}
+template <typename T>
+DoublyLinkedList<T>::~DoublyLinkedList()
+{
+    Node *p = head->next;
+    while (p != head)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    delete head;
+}
+template <typename T>
+int DoublyLinkedList<T>::Size() const
+{
+    int sz = 0;
+    Node *p = head->next;
+    while (p != head)
+    {
+        sz++;
+        p = p->next;
+    }
+    return sz;
+}
+template <typename T>
+int DoublyLinkedList<T>::Length() const
+{
+    return Size();
+}
+template <typename T>
+bool DoublyLinkedList<T>::IsEmpty() const
+{
+    return head->next == head;
+}
+template <typename T>
+bool DoublyLinkedList<T>::IsFull() const
+{
+    return false;
+}
+template <typename T>
+int DoublyLinkedList<T>::Search(const T &x) const
+{
+    Node *p = head->next;
+    int i = 1;
+    while (p != head)
+    {
+        if (p->data == x)
+        {
+            return i;
+        }
+        p = p->next;
+        i++;
+    }
+    return 0;
+}
+template <typename T>
+int DoublyLinkedList<T>::Locate(int i) const
+{
+    if (i < 1 || i > Size())
+    {
+        return 0;
+    }
+    return i;
+}
+template <typename T>
+T *DoublyLinkedList<T>::getData(int i) const
+{
+    if (i < 1 || i > Size())
+    {
+        return nullptr;
+    }
+    Node *p = head->next;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    return &p->data;
+}
+template <typename T>
+void DoublyLinkedList<T>::setData(int i, const T &x)
+{
+    if (i < 1 || i > Size())
+    {
+        return;
+    }
+    Node *p = head->next;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    p->data = x;
+    return;
+}
+template <typename T>
+bool DoublyLinkedList<T>::Insert(int i, const T &x)
+{
+    if (i < 1 || i > Size() + 1)
+    {
+        return false;
+    }
+    Node *p = head;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->prev = p;
+    p->next->prev = newNode;
+    newNode->next = p->next;
+    p->next = newNode;
+    return true;
+}
+template <typename T>
+bool DoublyLinkedList<T>::Remove(int i, T &x)
+{
+    if (i < 1 || i > Size())
+    {
+        return false;
+    }
+    Node *p = head;
+    for (int j = 1; j < i; j++)
+    {
+        p = p->next;
+    }
+    Node *delNode = p->next;
+    x = delNode->data;
+    p->next = delNode->next;
+    delNode->next->prev = p;
+    delete delNode;
+    return true;
+}
+template <typename T>
+void DoublyLinkedList<T>::Sort()
+{
+    if (IsEmpty())
+    {
+        return;
+    }
+    for (Node *p = head->next; p != head; p = p->next)
+    {
+        for (Node *q = p->next; q != head; q = q->next)
+        {
+            if (p->data > q->data)
+            {
+                std::swap(p->data, q->data);
+            }
+        }
+    }
+}
+template <typename T>
+void DoublyLinkedList<T>::Input()
+{
+    std::cout << "Input the length of the list: ";
+    int len;
+    std::cin >> len;
+    while (len < 0)
+    {
+        std::cout << "The length is negative, please input again: ";
+        std::cin >> len;
+    }
+    for (int i = 0; i < len; i++)
+    {
+        T x;
+        std::cout << "Input the " << i + 1 << "th element: ";
+        std::cin >> x;
+        pushBack(x);
+    }
+}
+template <typename T>
+void DoublyLinkedList<T>::Output()
+{
+    std::cout << "The length of the list is: " << Size() << std::endl;
+    Node *p = head->next;
+    int i = 1;
+    while (p != head)
+    {
+        std::cout << "The " << i << "th element is: " << p->data << std::endl;
+        p = p->next;
+        i++;
+    }
+}
+template <typename T>
+void DoublyLinkedList<T>::pushFront(const T &x)
+{
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->prev = head;
+    head->next->prev = newNode;
+    newNode->next = head->next;
+    head->next = newNode;
+}
+template <typename T>
+void DoublyLinkedList<T>::pushBack(const T &x)
+{
+    Node *newNode = new Node;
+    newNode->data = x;
+    newNode->next = head;
+    head->prev->next = newNode;
+    newNode->prev = head->prev;
+    head->prev = newNode;
+}
+template <typename T>
+void DoublyLinkedList<T>::removeFront()
+{
+    T x;
+    Remove(1, x);
+}
+template <typename T>
+void DoublyLinkedList<T>::removeBack()
+{
+    T x;
+    Remove(Size(), x);
+}
+template <typename T>
+void DoublyLinkedList<T>::OutputReverse()
+{
+    std::cout << "Reversed Ouput:" << std::endl;
+    std::cout << "The length of the list is: " << Size() << std::endl;
+    Node *p = head->prev;
+    int i = Size();
+    while (p != head)
+    {
+        std::cout << "The " << i << "th element is: " << p->data << std::endl;
+        p = p->prev;
+        i--;
+    }
+}
+template <typename T>
+void DoublyLinkedList<T>::reverseList()
+{
+    if (IsEmpty())
+    {
+        return;
+    }
+    Node *p = head->next, *tmp = NULL;
+    while (p != head)
+    {
+        tmp = p->next;
+        p->next = p->prev;
+        p->prev = tmp;
+    }
+    tmp = head->next;
+    head->next = head->prev;
+    head->prev = tmp;
+}
+template <typename T>
+DoublyLinkedList<T> &DoublyLinkedList<T>::operator=(const DoublyLinkedList<T> &L)
+{
+    if (this == &L)
+    {
+        return *this;
+    }
+    Node *p = head->next;
+    while (p != head)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    head->prev = head;
+    head->next = head;
+    p = L.head->next;
+    Node *q = head;
+    while (p != L.head)
+    {
+        q->next = new Node;
+        q->next->prev = q;
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    head->prev = q;
     q->next = head;
     return *this;
 }

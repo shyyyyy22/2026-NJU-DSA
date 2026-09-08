@@ -9,9 +9,10 @@ If you wany to use one datastructure, following is an example:
 // You can use SinglyLinkedList now
 ```
 
-## The DataStuuctures supported now (2026-09-07):
+## The DataStuuctures supported now (2026-09-08):
 
 1. SeqList
 2. SinglyLinkedList
-3. CircularLinkedList 
+3. CircularLinkedList
+4. DoublyLinkedList 
  
