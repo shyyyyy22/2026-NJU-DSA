@@ -164,6 +164,44 @@ public:
     void reverseList();
     DoublyLinkedList<T> &operator=(const DoublyLinkedList<T> &L);
 };
+template <typename T>
+class Stack
+{
+public:
+    Stack() = default;
+    virtual ~Stack() = default;
+    virtual void Push(const T &x) = 0;
+    virtual bool Pop(T &x) = 0;
+    virtual bool getTop(T &x) const = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual bool IsFull() const = 0;
+    virtual int getSize() const = 0;
+};
+template <typename T>
+class SeqStack : public Stack<T>
+{
+private:
+    T *elements;
+    int top;
+    int maxSize;
+    void overflowProcess();
+
+public:
+    SeqStack(int sz = 64);
+    SeqStack(const SeqStack<T> &S);
+    ~SeqStack() override;
+    void Push(const T &x) override;
+    bool Pop(T &x) override;
+    bool getTop(T &x) const override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int getSize() const override;
+
+    void MakeEmpty();
+    friend std::ostream &operator<<(std::ostream &os, SeqStack<T> &s);
+
+    SeqStack<T> &operator=(const SeqStack<T> &S);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -172,6 +210,11 @@ SeqList<T>::SeqList(int size)
     maxSize = size;
     last = 0;
     data = new T[maxSize];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqList" << std::endl;
+        exit(1);
+    }
 };
 template <typename T>
 SeqList<T>::SeqList(const SeqList<T> &L)
@@ -179,6 +222,11 @@ SeqList<T>::SeqList(const SeqList<T> &L)
     maxSize = L.maxSize;
     last = L.last;
     data = new T[maxSize];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqList" << std::endl;
+        exit(1);
+    }
     for (int i = 0; i < last; i++)
     {
         data[i] = L.data[i];
@@ -327,6 +375,11 @@ void SeqList<T>::reSize(int newSize)
         return;
     }
     T *newData = new T[newSize];
+    if (newData == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqList" << std::endl;
+        exit(1);
+    }
     int newLast = std::min(last, newSize);
     for (int i = 0; i < newLast; i++)
     {
@@ -348,6 +401,11 @@ SeqList<T> &SeqList<T>::operator=(const SeqList<T> &L)
     maxSize = L.maxSize;
     last = L.last;
     data = new T[maxSize];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqList" << std::endl;
+        exit(1);
+    }
     for (int i = 0; i < last; i++)
     {
         data[i] = L.data[i];
@@ -360,18 +418,33 @@ template <typename T>
 SinglyLinkedList<T>::SinglyLinkedList()
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for SinglyLinkedList.head" << std::endl;
+        exit(1);
+    }
     head->next = nullptr;
 }
 template <typename T>
 SinglyLinkedList<T>::SinglyLinkedList(const SinglyLinkedList<T> &L)
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for SinglyLinkedList.head" << std::endl;
+        exit(1);
+    }
     head->next = nullptr;
     Node *p = L.head->next;
     Node *q = head;
     while (p != nullptr)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for SinglyLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q = q->next;
         q->data = p->data;
         p = p->next;
@@ -484,6 +557,11 @@ bool SinglyLinkedList<T>::Insert(int i, const T &x)
         p = p->next;
     }
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = p->next;
     p->next = newNode;
@@ -561,6 +639,11 @@ template <typename T>
 void SinglyLinkedList<T>::pushFront(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = head->next;
     head->next = newNode;
@@ -569,6 +652,11 @@ template <typename T>
 void SinglyLinkedList<T>::pushBack(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = nullptr;
     Node *p = head;
@@ -610,6 +698,11 @@ SinglyLinkedList<T> &SinglyLinkedList<T>::operator=(const SinglyLinkedList<T> &L
     while (p != nullptr)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for SinglyLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q = q->next;
         q->data = p->data;
         p = p->next;
@@ -623,6 +716,11 @@ template <typename T>
 CircularLinkedList<T>::CircularLinkedList()
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for :CircularLinkedList.head" << std::endl;
+        exit(1);
+    }
     tail = head;
     head->next = head;
 }
@@ -630,12 +728,22 @@ template <typename T>
 CircularLinkedList<T>::CircularLinkedList(const CircularLinkedList<T> &L)
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for :CircularLinkedList.head" << std::endl;
+        exit(1);
+    }
     head->next = head;
     Node *p = L.head->next;
     Node *q = head;
     while (p != L.head)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for :CircularLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q = q->next;
         q->data = p->data;
         p = p->next;
@@ -749,6 +857,11 @@ bool CircularLinkedList<T>::Insert(int i, const T &x)
         p = p->next;
     }
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = p->next;
     p->next = newNode;
@@ -834,6 +947,11 @@ template <typename T>
 void CircularLinkedList<T>::pushFront(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = head->next;
     head->next = newNode;
@@ -842,6 +960,11 @@ template <typename T>
 void CircularLinkedList<T>::pushBack(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = head;
     tail->next = newNode;
@@ -884,6 +1007,11 @@ CircularLinkedList<T> &CircularLinkedList<T>::operator=(const CircularLinkedList
     while (p != L.head)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for :CircularLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q = q->next;
         q->data = p->data;
         p = p->next;
@@ -898,6 +1026,11 @@ template <typename T>
 DoublyLinkedList<T>::DoublyLinkedList()
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for :DoublyLinkedList.head" << std::endl;
+        exit(1);
+    }
     head->prev = head;
     head->next = head;
 }
@@ -905,6 +1038,11 @@ template <typename T>
 DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList<T> &L)
 {
     head = new Node;
+    if (head == nullptr)
+    {
+        std::cerr << "malloc memory failed for :DoublyLinkedList.head" << std::endl;
+        exit(1);
+    }
     head->prev = head;
     head->next = head;
     Node *p = L.head->next;
@@ -912,6 +1050,11 @@ DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList<T> &L)
     while (p != L.head)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for :DoublyLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q->next->prev = q;
         q = q->next;
         q->data = p->data;
@@ -1026,6 +1169,11 @@ bool DoublyLinkedList<T>::Insert(int i, const T &x)
         p = p->next;
     }
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->prev = p;
     p->next->prev = newNode;
@@ -1106,6 +1254,11 @@ template <typename T>
 void DoublyLinkedList<T>::pushFront(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->prev = head;
     head->next->prev = newNode;
@@ -1116,6 +1269,11 @@ template <typename T>
 void DoublyLinkedList<T>::pushBack(const T &x)
 {
     Node *newNode = new Node;
+    if (newNode == nullptr)
+    {
+        std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
+        exit(1);
+    }
     newNode->data = x;
     newNode->next = head;
     head->prev->next = newNode;
@@ -1187,6 +1345,11 @@ DoublyLinkedList<T> &DoublyLinkedList<T>::operator=(const DoublyLinkedList<T> &L
     while (p != L.head)
     {
         q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for :DoublyLinkedList.q->next" << std::endl;
+            exit(1);
+        }
         q->next->prev = q;
         q = q->next;
         q->data = p->data;
@@ -1196,5 +1359,144 @@ DoublyLinkedList<T> &DoublyLinkedList<T>::operator=(const DoublyLinkedList<T> &L
     q->next = head;
     return *this;
 }
+#endif
+#ifdef DS_SEQSTACK_IMPLEMENTATION
+template <typename T>
+void SeqStack<T>::overflowProcess()
+{
+    maxSize *= 2;
+    T *newElements = new T[maxSize];
+    if (newElements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqStack.newElements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < top + 1; ++i)
+    {
+        newElements[i] = elements[i];
+    }
+    delete[] elements;
+    elements = newElements;
+}
+template <typename T>
+SeqStack<T>::SeqStack(int sz)
+{
+    maxSize = sz;
+    top = -1;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
+        exit(1);
+    }
+}
+template <typename T>
+SeqStack<T>::SeqStack(const SeqStack<T> &S)
+{
+    maxSize = S.maxSize;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
+        exit(1);
+    }
+    top = S.top;
+    for (int i = 0; i < top + 1; ++i)
+    {
+        elements[i] = S.elements[i];
+    }
+}
+template <typename T>
+SeqStack<T>::~SeqStack()
+{
+    delete[] elements;
+};
+template <typename T>
+void SeqStack<T>::Push(const T &x)
+{
+    if (IsFull())
+    {
+        overflowProcess();
+    }
+    elements[++top] = x;
+};
+template <typename T>
+bool SeqStack<T>::Pop(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Stack is empty, Pop() failed";
+        return false;
+    }
+
+    x = elements[top--];
+
+    return true;
+};
+template <typename T>
+bool SeqStack<T>::getTop(T &x) const
+{
+    if (IsEmpty())
+    {
+        std::cout << "Stack is empty, getTop() failed";
+        return false;
+    }
+    x = elements[top];
+    return true;
+};
+template <typename T>
+bool SeqStack<T>::IsEmpty() const
+{
+    return top == -1;
+};
+template <typename T>
+bool SeqStack<T>::IsFull() const
+{
+    return top == maxSize - 1;
+};
+template <typename T>
+int SeqStack<T>::getSize() const
+{
+    return top + 1;
+};
+template <typename T>
+void SeqStack<T>::MakeEmpty()
+{
+    top = -1;
+}
+template <typename T>
+SeqStack<T> &SeqStack<T>::operator=(const SeqStack<T> &S)
+{
+    if (this == &S)
+    {
+        return *this;
+    }
+    delete[] elements;
+    maxSize = S.maxSize;
+    top = S.top;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < top + 1; ++i)
+    {
+        elements[i] = S.elements[i];
+    }
+
+    return *this;
+};
+template <typename T>
+std::ostream &operator<<(std::ostream &os, SeqStack<T> &s)
+{
+    os << "top = " << s.top << std::endl;
+    for (int i = 0; i < s.top + 1; ++i)
+    {
+        os << s.elements[i] << " ";
+    }
+    os << std::endl;
+    return os;
+};
 #endif
 #endif // DATASTRUCTURE
