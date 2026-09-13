@@ -295,6 +295,44 @@ public:
 
     SeqQueue<T> &operator=(const SeqQueue<T> &Q);
 };
+template <typename T>
+class LinkedQueue : public Queue<T>
+{
+private:
+    typedef struct Node
+    {
+        T data;
+        Node *next;
+    } Node;
+    Node *front, *rear;
+
+public:
+    LinkedQueue();
+    LinkedQueue(const LinkedQueue<T> &Q);
+    ~LinkedQueue() override;
+    bool EnQueue(const T &x) override;
+    bool DeQueue(T &x) override;
+    bool getFront(T &x) override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int getSize() const override;
+
+    void MakeEmpty();
+    friend std::ostream &operator<<(std::ostream &os, LinkedQueue<T> &Q)
+    {
+        os << "Queue Size: " << Q.getSize() << std::endl;
+        auto *p = Q.front;
+        while (p != nullptr)
+        {
+            os << p->data << " ";
+            p = p->next;
+        }
+        os << std::endl;
+        return os;
+    }
+
+    LinkedQueue<T> &operator=(const LinkedQueue<T> &Q);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -1840,6 +1878,193 @@ SeqQueue<T> &SeqQueue<T>::operator=(const SeqQueue<T> &Q)
     {
         elements[i] = Q.elements[i];
     }
+    return *this;
+}
+#endif
+#ifdef DS_LINKEDQUEUE_IMPLEMENTATION
+template <typename T>
+LinkedQueue<T>::LinkedQueue()
+{
+    front = rear = nullptr;
+}
+template <typename T>
+LinkedQueue<T>::LinkedQueue(const LinkedQueue<T> &Q)
+{
+    Node *p = Q.front;
+    if (p == nullptr)
+    {
+        front = rear = nullptr;
+        return;
+    }
+    front = new Node;
+    if (front == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
+        exit(1);
+    }
+    rear = front;
+    rear->next = nullptr;
+    front->data = p->data;
+    Node *q = rear;
+    p = p->next;
+
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedQueue.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    q->next = nullptr;
+    rear = q;
+}
+template <typename T>
+LinkedQueue<T>::~LinkedQueue()
+{
+    Node *p = front, *del = nullptr;
+    while (p != nullptr)
+    {
+        del = p;
+        p = p->next;
+        delete del;
+    }
+    front = rear = nullptr;
+}
+template <typename T>
+bool LinkedQueue<T>::EnQueue(const T &x)
+{
+    if (front == nullptr)
+    {
+        front = rear = new Node;
+        if (front == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
+            return false;
+        }
+        front->data = x;
+        rear->next = nullptr;
+        return true;
+    }
+    rear->next = new Node;
+    if (rear->next == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedQueue.rear->next" << std::endl;
+        return false;
+    }
+    rear = rear->next;
+    rear->data = x;
+    rear->next = nullptr;
+    return true;
+}
+template <typename T>
+bool LinkedQueue<T>::DeQueue(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, DeQueue() failed" << std::endl;
+        return false;
+    }
+    Node *del = front;
+    front = front->next;
+    x = del->data;
+    delete del;
+    if (front == nullptr)
+    {
+        rear = nullptr;
+    }
+    return true;
+}
+template <typename T>
+bool LinkedQueue<T>::getFront(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, getFront() failed" << std::endl;
+        return false;
+    }
+    x = front->data;
+    return true;
+}
+template <typename T>
+bool LinkedQueue<T>::IsEmpty() const
+{
+    return front == nullptr;
+}
+template <typename T>
+bool LinkedQueue<T>::IsFull() const
+{
+    return false;
+}
+template <typename T>
+int LinkedQueue<T>::getSize() const
+{
+    int sz = 0;
+    Node *p = front;
+    while (p != nullptr)
+    {
+        sz++;
+        p = p->next;
+    }
+    return sz;
+}
+template <typename T>
+void LinkedQueue<T>::MakeEmpty()
+{
+    Node *p = front, *del = nullptr;
+    while (p != nullptr)
+    {
+        del = p;
+        p = p->next;
+        delete del;
+    }
+    front = rear = nullptr;
+}
+template <typename T>
+LinkedQueue<T> &LinkedQueue<T>::operator=(const LinkedQueue<T> &Q)
+{
+    if (this == &Q)
+    {
+        return *this;
+    }
+    MakeEmpty();
+    Node *p = Q.front;
+    if (p == nullptr)
+    {
+        front = rear = nullptr;
+        return *this;
+    }
+    front = new Node;
+    if (front == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
+        exit(1);
+    }
+    rear = front;
+    rear->next = nullptr;
+    front->data = p->data;
+    Node *q = rear;
+    p = p->next;
+
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedQueue.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    q->next = nullptr;
+    rear = q;
+
     return *this;
 }
 #endif

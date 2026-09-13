@@ -18,4 +18,5 @@ If you wany to use one datastructure, following is an example:
 5. SeqStack
 6. LinkedStack
 7. SeqQueue
+8. LinkedQueue
  
