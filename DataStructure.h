@@ -198,9 +198,56 @@ public:
     int getSize() const override;
 
     void MakeEmpty();
-    friend std::ostream &operator<<(std::ostream &os, SeqStack<T> &s);
+    friend std::ostream &operator<<(std::ostream &os, SeqStack<T> &S)
+    {
+        os << "top = " << S.top << std::endl;
+        for (int i = 0; i < S.top + 1; ++i)
+        {
+            os << S.elements[i] << " ";
+        }
+        os << std::endl;
+        return os;
+    }
 
     SeqStack<T> &operator=(const SeqStack<T> &S);
+};
+template <typename T>
+class LinkedStack : public Stack<T>
+{
+private:
+    typedef struct Node
+    {
+        T data;
+        Node *next;
+    } Node;
+    Node *top;
+
+public:
+    LinkedStack();
+    LinkedStack(const LinkedStack<T> &S);
+    ~LinkedStack() override;
+    void Push(const T &x) override;
+    bool Pop(T &x) override;
+    bool getTop(T &x) const override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int getSize() const override;
+
+    void MakeEmpty();
+    friend std::ostream &operator<<(std::ostream &os, LinkedStack<T> &S)
+    {
+        os << "Stack size: " << S.getSize() << std::endl;
+        auto *p = S.top->next;
+        while (p != nullptr)
+        {
+            os << p->data << " ";
+            p = p->next;
+        }
+        os << std::endl;
+        return os;
+    };
+
+    LinkedStack<T> &operator=(const LinkedStack<T> &S);
 };
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
@@ -1487,16 +1534,153 @@ SeqStack<T> &SeqStack<T>::operator=(const SeqStack<T> &S)
 
     return *this;
 };
+#endif
+#ifdef DS_LINKEDSTACK_IMPLEMENTATION
 template <typename T>
-std::ostream &operator<<(std::ostream &os, SeqStack<T> &s)
+LinkedStack<T>::LinkedStack()
 {
-    os << "top = " << s.top << std::endl;
-    for (int i = 0; i < s.top + 1; ++i)
+    top = new Node;
+    if (top == nullptr)
     {
-        os << s.elements[i] << " ";
+        std::cerr << "malloc memory failed for LinkedStack.top" << std::endl;
+        exit(1);
     }
-    os << std::endl;
-    return os;
-};
+    top->next = nullptr;
+}
+template <typename T>
+LinkedStack<T>::LinkedStack(const LinkedStack<T> &S)
+{
+    top = new Node;
+    if (top == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedStack.top" << std::endl;
+        exit(1);
+    }
+    top->next = nullptr;
+    Node *p = S.top->next;
+    Node *q = top;
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedStack.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    q->next = nullptr;
+}
+template <typename T>
+LinkedStack<T>::~LinkedStack()
+{
+    Node *p = top->next;
+    while (p != nullptr)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    delete top;
+}
+template <typename T>
+void LinkedStack<T>::Push(const T &x)
+{
+    Node *p = new Node;
+    if (p == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedStack.p" << std::endl;
+        exit(1);
+    }
+    p->data = x;
+    p->next = top->next;
+    top->next = p;
+}
+template <typename T>
+bool LinkedStack<T>::Pop(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Stack is empty, Pop() failed" << std::endl;
+        return false;
+    }
+    Node *del = top->next;
+    top->next = del->next;
+    x = del->data;
+    delete del;
+    return true;
+}
+template <typename T>
+bool LinkedStack<T>::getTop(T &x) const
+{
+    if (IsEmpty())
+    {
+        std::cout << "Stack is empty, getTop() failed" << std::endl;
+        return false;
+    }
+    x = top->next->data;
+    return true;
+}
+template <typename T>
+bool LinkedStack<T>::IsEmpty() const
+{
+    return top->next == nullptr;
+}
+template <typename T>
+bool LinkedStack<T>::IsFull() const
+{
+    return false;
+}
+template <typename T>
+int LinkedStack<T>::getSize() const
+{
+    int sz = 0;
+    Node *p = top->next;
+    while (p != nullptr)
+    {
+        sz++;
+        p = p->next;
+    }
+    return sz;
+}
+template <typename T>
+void LinkedStack<T>::MakeEmpty()
+{
+    Node *p = top->next;
+    while (p != nullptr)
+    {
+        Node *q = p;
+        p = p->next;
+        delete q;
+    }
+    top->next = nullptr;
+}
+template <typename T>
+LinkedStack<T> &LinkedStack<T>::operator=(const LinkedStack<T> &S)
+{
+    if (this == &S)
+    {
+        return *this;
+    }
+    MakeEmpty();
+    Node *p = S.top->next;
+    Node *q = top;
+    while (p != nullptr)
+    {
+        q->next = new Node;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedStack.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        p = p->next;
+    }
+    q->next = nullptr;
+    return *this;
+}
 #endif
 #endif // DATASTRUCTURE
