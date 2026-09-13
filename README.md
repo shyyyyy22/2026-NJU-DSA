@@ -17,4 +17,5 @@ If you wany to use one datastructure, following is an example:
 4. DoublyLinkedList 
 5. SeqStack
 6. LinkedStack
+7. SeqQueue
  

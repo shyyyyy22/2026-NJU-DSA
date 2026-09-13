@@ -249,6 +249,52 @@ public:
 
     LinkedStack<T> &operator=(const LinkedStack<T> &S);
 };
+template <typename T>
+class Queue
+{
+public:
+    Queue() = default;
+    virtual ~Queue() = default;
+    virtual bool EnQueue(const T &x) = 0;
+    virtual bool DeQueue(T &x) = 0;
+    virtual bool getFront(T &x) = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual bool IsFull() const = 0;
+    virtual int getSize() const = 0;
+};
+template <typename T>
+class SeqQueue : public Queue<T>
+{
+private:
+    int front, rear;
+    T *elements;
+    int maxSize;
+
+public:
+    SeqQueue(int sz = 64);
+    SeqQueue(const SeqQueue<T> &Q);
+    ~SeqQueue() override;
+    bool EnQueue(const T &x) override;
+    bool DeQueue(T &x) override;
+    bool getFront(T &x) override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int getSize() const override;
+
+    void MakeEmpty();
+    friend std::ostream &operator<<(std::ostream &os, SeqQueue<T> &Q)
+    {
+        os << "Queue Size: " << Q.getSize() << std::endl;
+        for (int i = Q.front; i != Q.rear; i = (i + 1) % Q.maxSize)
+        {
+            os << Q.elements[i] << " ";
+        }
+        os << std::endl;
+        return os;
+    }
+
+    SeqQueue<T> &operator=(const SeqQueue<T> &Q);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -1680,6 +1726,120 @@ LinkedStack<T> &LinkedStack<T>::operator=(const LinkedStack<T> &S)
         p = p->next;
     }
     q->next = nullptr;
+    return *this;
+}
+#endif
+#ifdef DS_SEQQUEUE_IMPLEMENTATION
+template <typename T>
+SeqQueue<T>::SeqQueue(int sz)
+{
+    maxSize = sz;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
+        exit(1);
+    }
+    front = rear = 0;
+}
+template <typename T>
+SeqQueue<T>::SeqQueue(const SeqQueue<T> &Q)
+{
+    maxSize = Q.maxSize;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < maxSize; ++i)
+    {
+        elements[i] = Q.elements[i];
+    }
+    front = Q.front;
+    rear = Q.rear;
+}
+template <typename T>
+SeqQueue<T>::~SeqQueue()
+{
+    delete[] elements;
+}
+template <typename T>
+bool SeqQueue<T>::EnQueue(const T &x)
+{
+    if (IsFull())
+    {
+        std::cout << "Queue is Full, EnQueue() failed" << std::endl;
+        return false;
+    }
+    elements[rear] = x;
+    rear = (rear + 1) % maxSize;
+    return true;
+}
+template <typename T>
+bool SeqQueue<T>::DeQueue(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, Dequeue() failed" << std::endl;
+        return false;
+    }
+    x = elements[front];
+    front = (front + 1) % maxSize;
+    return true;
+}
+template <typename T>
+bool SeqQueue<T>::getFront(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, getFront() failed" << std::endl;
+        return false;
+    }
+    x = elements[front];
+    return true;
+}
+template <typename T>
+bool SeqQueue<T>::IsEmpty() const
+{
+    return front == rear;
+}
+template <typename T>
+bool SeqQueue<T>::IsFull() const
+{
+    return (rear + 1) % maxSize == front;
+}
+template <typename T>
+int SeqQueue<T>::getSize() const
+{
+    return (rear - front + maxSize) % maxSize;
+}
+template <typename T>
+void SeqQueue<T>::MakeEmpty()
+{
+    front = rear = 0;
+}
+template <typename T>
+SeqQueue<T> &SeqQueue<T>::operator=(const SeqQueue<T> &Q)
+{
+    if (this == &Q)
+    {
+        return *this;
+    }
+    delete[] elements;
+    front = Q.front;
+    rear = Q.rear;
+    maxSize = Q.maxSize;
+    elements = new T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < maxSize; ++i)
+    {
+        elements[i] = Q.elements[i];
+    }
     return *this;
 }
 #endif
