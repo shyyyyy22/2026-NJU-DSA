@@ -333,6 +333,28 @@ public:
 
     LinkedQueue<T> &operator=(const LinkedQueue<T> &Q);
 };
+template <typename T>
+class PQueue
+{
+private:
+    T *pqelements;
+    int count, maxSize;
+    void adjust();
+
+public:
+    PQueue(int sz = 64);
+    PQueue(const PQueue<T> &Q);
+    ~PQueue();
+    bool Insert(const T &x);
+    bool RemoveMin(T &x);
+    bool getFront(T &x);
+    void makeEmpty();
+    bool IsEmpty() const;
+    bool IsFull() const;
+    int getSize() const;
+
+    PQueue<T> &operator=(const PQueue<T> &Q);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -2065,6 +2087,139 @@ LinkedQueue<T> &LinkedQueue<T>::operator=(const LinkedQueue<T> &Q)
     q->next = nullptr;
     rear = q;
 
+    return *this;
+}
+#endif
+#ifdef DS_PQUEUE_IMPLEMENTATION
+template <typename T>
+void PQueue<T>::adjust()
+{
+    for (int i = count - 1; i > 0; --i)
+    {
+        if (pqelements[i] < pqelements[i - 1])
+        {
+            T tmp = pqelements[i];
+            pqelements[i] = pqelements[i - 1];
+            pqelements[i - 1] = tmp;
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+template <typename T>
+PQueue<T>::PQueue(int sz)
+{
+    maxSize = sz;
+    count = 0;
+    pqelements = new T[maxSize];
+    if (pqelements == nullptr)
+    {
+        std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
+        exit(1);
+    }
+}
+template <typename T>
+PQueue<T>::PQueue(const PQueue<T> &Q)
+{
+    maxSize = Q.maxSize;
+    count = Q.count;
+    pqelements = new T[maxSize];
+    if (pqelements == nullptr)
+    {
+        std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < count; ++i)
+    {
+        pqelements[i] = Q.pqelements[i];
+    }
+}
+template <typename T>
+PQueue<T>::~PQueue()
+{
+    delete[] pqelements;
+}
+template <typename T>
+bool PQueue<T>::Insert(const T &x)
+{
+    if (IsFull())
+    {
+        std::cout << "Queue is full, Insert() failed" << std::endl;
+        return false;
+    }
+    pqelements[count++] = x;
+    adjust();
+    return true;
+}
+template <typename T>
+bool PQueue<T>::RemoveMin(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, Remove() failed" << std::endl;
+        return false;
+    }
+    x = pqelements[0];
+    for (int i = 0; i < count - 1; ++i)
+    {
+        pqelements[i] = pqelements[i + 1];
+    }
+    count--;
+    return true;
+}
+template <typename T>
+bool PQueue<T>::getFront(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, getFront() failed" << std::endl;
+        return false;
+    }
+    x = pqelements[0];
+    return true;
+}
+template <typename T>
+void PQueue<T>::makeEmpty()
+{
+    count = 0;
+}
+template <typename T>
+bool PQueue<T>::IsEmpty() const
+{
+    return count == 0;
+}
+template <typename T>
+bool PQueue<T>::IsFull() const
+{
+    return count == maxSize;
+}
+template <typename T>
+int PQueue<T>::getSize() const
+{
+    return count;
+}
+template <typename T>
+PQueue<T> &PQueue<T>::operator=(const PQueue<T> &Q)
+{
+    if (this == &Q)
+    {
+        return *this;
+    }
+    maxSize = Q.maxSize;
+    count = Q.count;
+    delete[] pqelements;
+    pqelements = new T[maxSize];
+    if (pqelements == nullptr)
+    {
+        std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < count; ++i)
+    {
+        pqelements[i] = Q.pqelements[i];
+    }
     return *this;
 }
 #endif

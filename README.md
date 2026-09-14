@@ -9,7 +9,7 @@ If you wany to use one datastructure, following is an example:
 // You can use SinglyLinkedList now
 ```
 
-## The DataStuuctures supported now (2026-09-13):
+## The DataStuuctures supported now (2026-09-14):
 
 1. SeqList
 2. SinglyLinkedList
@@ -19,4 +19,5 @@ If you wany to use one datastructure, following is an example:
 6. LinkedStack
 7. SeqQueue
 8. LinkedQueue
+9. PQueue
  
