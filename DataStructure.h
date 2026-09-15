@@ -265,7 +265,7 @@ public:
 template <typename T>
 class SeqQueue : public Queue<T>
 {
-private:
+protected:
     int front, rear;
     T *elements;
     int maxSize;
@@ -355,6 +355,39 @@ public:
 
     PQueue<T> &operator=(const PQueue<T> &Q);
 };
+template <typename T>
+class Deque
+{
+public:
+    Deque() = default;
+    virtual ~Deque() = default;
+    virtual bool getHead(T &x) = 0;
+    virtual bool getTail(T &x) = 0;
+    virtual bool EnQueueHead(const T &x) = 0;
+    virtual bool EnQueueTail(const T &x) = 0;
+    virtual bool DeQueueHead(T &x) = 0;
+    virtual bool DeQueueTail(T &x) = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual bool IsFull() const = 0;
+    virtual int getSize() const = 0;
+};
+template <typename T>
+class SeqDeque : public SeqQueue<T>, public Deque<T>
+{
+public:
+    SeqDeque(int sz = 64);
+    SeqDeque(const SeqDeque<T> &Q);
+    ~SeqDeque() = default;
+    bool getHead(T &x) override;
+    bool getTail(T &x) override;
+    bool EnQueueHead(const T &x) override;
+    bool DeQueueHead(T &x) override;
+    bool EnQueueTail(const T &x) override;
+    bool DeQueueTail(T &x) override;
+    bool IsEmpty() const override;
+    bool IsFull() const override;
+    int getSize() const override;
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -362,7 +395,7 @@ SeqList<T>::SeqList(int size)
 {
     maxSize = size;
     last = 0;
-    data = new T[maxSize];
+    data = new (std::nothrow) T[maxSize];
     if (data == nullptr)
     {
         std::cerr << "malloc memory failed for SeqList" << std::endl;
@@ -374,7 +407,7 @@ SeqList<T>::SeqList(const SeqList<T> &L)
 {
     maxSize = L.maxSize;
     last = L.last;
-    data = new T[maxSize];
+    data = new (std::nothrow) T[maxSize];
     if (data == nullptr)
     {
         std::cerr << "malloc memory failed for SeqList" << std::endl;
@@ -527,7 +560,7 @@ void SeqList<T>::reSize(int newSize)
         std::cout << "The new size is invalid, please input again: ";
         return;
     }
-    T *newData = new T[newSize];
+    T *newData = new (std::nothrow) T[newSize];
     if (newData == nullptr)
     {
         std::cerr << "malloc memory failed for SeqList" << std::endl;
@@ -553,7 +586,7 @@ SeqList<T> &SeqList<T>::operator=(const SeqList<T> &L)
     delete[] data;
     maxSize = L.maxSize;
     last = L.last;
-    data = new T[maxSize];
+    data = new (std::nothrow) T[maxSize];
     if (data == nullptr)
     {
         std::cerr << "malloc memory failed for SeqList" << std::endl;
@@ -570,7 +603,7 @@ SeqList<T> &SeqList<T>::operator=(const SeqList<T> &L)
 template <typename T>
 SinglyLinkedList<T>::SinglyLinkedList()
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for SinglyLinkedList.head" << std::endl;
@@ -581,7 +614,7 @@ SinglyLinkedList<T>::SinglyLinkedList()
 template <typename T>
 SinglyLinkedList<T>::SinglyLinkedList(const SinglyLinkedList<T> &L)
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for SinglyLinkedList.head" << std::endl;
@@ -592,7 +625,7 @@ SinglyLinkedList<T>::SinglyLinkedList(const SinglyLinkedList<T> &L)
     Node *q = head;
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for SinglyLinkedList.q->next" << std::endl;
@@ -709,7 +742,7 @@ bool SinglyLinkedList<T>::Insert(int i, const T &x)
     {
         p = p->next;
     }
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
@@ -791,7 +824,7 @@ void SinglyLinkedList<T>::Output()
 template <typename T>
 void SinglyLinkedList<T>::pushFront(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
@@ -804,7 +837,7 @@ void SinglyLinkedList<T>::pushFront(const T &x)
 template <typename T>
 void SinglyLinkedList<T>::pushBack(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for SinglyLinkedList.newNode" << std::endl;
@@ -850,7 +883,7 @@ SinglyLinkedList<T> &SinglyLinkedList<T>::operator=(const SinglyLinkedList<T> &L
     Node *q = head;
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for SinglyLinkedList.q->next" << std::endl;
@@ -868,7 +901,7 @@ SinglyLinkedList<T> &SinglyLinkedList<T>::operator=(const SinglyLinkedList<T> &L
 template <typename T>
 CircularLinkedList<T>::CircularLinkedList()
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for :CircularLinkedList.head" << std::endl;
@@ -880,7 +913,7 @@ CircularLinkedList<T>::CircularLinkedList()
 template <typename T>
 CircularLinkedList<T>::CircularLinkedList(const CircularLinkedList<T> &L)
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for :CircularLinkedList.head" << std::endl;
@@ -891,7 +924,7 @@ CircularLinkedList<T>::CircularLinkedList(const CircularLinkedList<T> &L)
     Node *q = head;
     while (p != L.head)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for :CircularLinkedList.q->next" << std::endl;
@@ -1009,7 +1042,7 @@ bool CircularLinkedList<T>::Insert(int i, const T &x)
     {
         p = p->next;
     }
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
@@ -1099,7 +1132,7 @@ void CircularLinkedList<T>::Output()
 template <typename T>
 void CircularLinkedList<T>::pushFront(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
@@ -1112,7 +1145,7 @@ void CircularLinkedList<T>::pushFront(const T &x)
 template <typename T>
 void CircularLinkedList<T>::pushBack(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :CircularLinkedList.newNode" << std::endl;
@@ -1159,7 +1192,7 @@ CircularLinkedList<T> &CircularLinkedList<T>::operator=(const CircularLinkedList
     Node *q = head;
     while (p != L.head)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for :CircularLinkedList.q->next" << std::endl;
@@ -1178,7 +1211,7 @@ CircularLinkedList<T> &CircularLinkedList<T>::operator=(const CircularLinkedList
 template <typename T>
 DoublyLinkedList<T>::DoublyLinkedList()
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for :DoublyLinkedList.head" << std::endl;
@@ -1190,7 +1223,7 @@ DoublyLinkedList<T>::DoublyLinkedList()
 template <typename T>
 DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList<T> &L)
 {
-    head = new Node;
+    head = new (std::nothrow) Node;
     if (head == nullptr)
     {
         std::cerr << "malloc memory failed for :DoublyLinkedList.head" << std::endl;
@@ -1202,7 +1235,7 @@ DoublyLinkedList<T>::DoublyLinkedList(const DoublyLinkedList<T> &L)
     Node *q = head;
     while (p != L.head)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for :DoublyLinkedList.q->next" << std::endl;
@@ -1321,7 +1354,7 @@ bool DoublyLinkedList<T>::Insert(int i, const T &x)
     {
         p = p->next;
     }
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
@@ -1406,7 +1439,7 @@ void DoublyLinkedList<T>::Output()
 template <typename T>
 void DoublyLinkedList<T>::pushFront(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
@@ -1421,7 +1454,7 @@ void DoublyLinkedList<T>::pushFront(const T &x)
 template <typename T>
 void DoublyLinkedList<T>::pushBack(const T &x)
 {
-    Node *newNode = new Node;
+    Node *newNode = new (std::nothrow) Node;
     if (newNode == nullptr)
     {
         std::cerr << "malloc memory failed for :DoublyLinkedList.newNode" << std::endl;
@@ -1472,6 +1505,7 @@ void DoublyLinkedList<T>::reverseList()
         tmp = p->next;
         p->next = p->prev;
         p->prev = tmp;
+        p = tmp;
     }
     tmp = head->next;
     head->next = head->prev;
@@ -1497,7 +1531,7 @@ DoublyLinkedList<T> &DoublyLinkedList<T>::operator=(const DoublyLinkedList<T> &L
     Node *q = head;
     while (p != L.head)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for :DoublyLinkedList.q->next" << std::endl;
@@ -1518,7 +1552,7 @@ template <typename T>
 void SeqStack<T>::overflowProcess()
 {
     maxSize *= 2;
-    T *newElements = new T[maxSize];
+    T *newElements = new (std::nothrow) T[maxSize];
     if (newElements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqStack.newElements" << std::endl;
@@ -1536,7 +1570,7 @@ SeqStack<T>::SeqStack(int sz)
 {
     maxSize = sz;
     top = -1;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
@@ -1547,7 +1581,7 @@ template <typename T>
 SeqStack<T>::SeqStack(const SeqStack<T> &S)
 {
     maxSize = S.maxSize;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
@@ -1627,7 +1661,7 @@ SeqStack<T> &SeqStack<T>::operator=(const SeqStack<T> &S)
     delete[] elements;
     maxSize = S.maxSize;
     top = S.top;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqStack.elements" << std::endl;
@@ -1645,7 +1679,7 @@ SeqStack<T> &SeqStack<T>::operator=(const SeqStack<T> &S)
 template <typename T>
 LinkedStack<T>::LinkedStack()
 {
-    top = new Node;
+    top = new (std::nothrow) Node;
     if (top == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedStack.top" << std::endl;
@@ -1656,7 +1690,7 @@ LinkedStack<T>::LinkedStack()
 template <typename T>
 LinkedStack<T>::LinkedStack(const LinkedStack<T> &S)
 {
-    top = new Node;
+    top = new (std::nothrow) Node;
     if (top == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedStack.top" << std::endl;
@@ -1667,7 +1701,7 @@ LinkedStack<T>::LinkedStack(const LinkedStack<T> &S)
     Node *q = top;
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for LinkedStack.q->next" << std::endl;
@@ -1694,7 +1728,7 @@ LinkedStack<T>::~LinkedStack()
 template <typename T>
 void LinkedStack<T>::Push(const T &x)
 {
-    Node *p = new Node;
+    Node *p = new (std::nothrow) Node;
     if (p == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedStack.p" << std::endl;
@@ -1775,7 +1809,7 @@ LinkedStack<T> &LinkedStack<T>::operator=(const LinkedStack<T> &S)
     Node *q = top;
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for LinkedStack.q->next" << std::endl;
@@ -1794,7 +1828,7 @@ template <typename T>
 SeqQueue<T>::SeqQueue(int sz)
 {
     maxSize = sz;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
@@ -1806,7 +1840,7 @@ template <typename T>
 SeqQueue<T>::SeqQueue(const SeqQueue<T> &Q)
 {
     maxSize = Q.maxSize;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
@@ -1890,7 +1924,7 @@ SeqQueue<T> &SeqQueue<T>::operator=(const SeqQueue<T> &Q)
     front = Q.front;
     rear = Q.rear;
     maxSize = Q.maxSize;
-    elements = new T[maxSize];
+    elements = new (std::nothrow) T[maxSize];
     if (elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqQueue.elements" << std::endl;
@@ -1918,7 +1952,7 @@ LinkedQueue<T>::LinkedQueue(const LinkedQueue<T> &Q)
         front = rear = nullptr;
         return;
     }
-    front = new Node;
+    front = new (std::nothrow) Node;
     if (front == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
@@ -1932,7 +1966,7 @@ LinkedQueue<T>::LinkedQueue(const LinkedQueue<T> &Q)
 
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for LinkedQueue.q->next" << std::endl;
@@ -1962,7 +1996,7 @@ bool LinkedQueue<T>::EnQueue(const T &x)
 {
     if (front == nullptr)
     {
-        front = rear = new Node;
+        front = rear = new (std::nothrow) Node;
         if (front == nullptr)
         {
             std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
@@ -1972,7 +2006,7 @@ bool LinkedQueue<T>::EnQueue(const T &x)
         rear->next = nullptr;
         return true;
     }
-    rear->next = new Node;
+    rear->next = new (std::nothrow) Node;
     if (rear->next == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedQueue.rear->next" << std::endl;
@@ -2060,7 +2094,7 @@ LinkedQueue<T> &LinkedQueue<T>::operator=(const LinkedQueue<T> &Q)
         front = rear = nullptr;
         return *this;
     }
-    front = new Node;
+    front = new (std::nothrow) Node;
     if (front == nullptr)
     {
         std::cerr << "malloc memory failed for LinkedQueue.front" << std::endl;
@@ -2074,7 +2108,7 @@ LinkedQueue<T> &LinkedQueue<T>::operator=(const LinkedQueue<T> &Q)
 
     while (p != nullptr)
     {
-        q->next = new Node;
+        q->next = new (std::nothrow) Node;
         if (q->next == nullptr)
         {
             std::cerr << "malloc memory failed for LinkedQueue.q->next" << std::endl;
@@ -2113,7 +2147,7 @@ PQueue<T>::PQueue(int sz)
 {
     maxSize = sz;
     count = 0;
-    pqelements = new T[maxSize];
+    pqelements = new (std::nothrow) T[maxSize];
     if (pqelements == nullptr)
     {
         std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
@@ -2125,7 +2159,7 @@ PQueue<T>::PQueue(const PQueue<T> &Q)
 {
     maxSize = Q.maxSize;
     count = Q.count;
-    pqelements = new T[maxSize];
+    pqelements = new (std::nothrow) T[maxSize];
     if (pqelements == nullptr)
     {
         std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
@@ -2210,7 +2244,7 @@ PQueue<T> &PQueue<T>::operator=(const PQueue<T> &Q)
     maxSize = Q.maxSize;
     count = Q.count;
     delete[] pqelements;
-    pqelements = new T[maxSize];
+    pqelements = new (std::nothrow) T[maxSize];
     if (pqelements == nullptr)
     {
         std::cerr << "malloc memory failed for PQueue.pqelements" << std::endl;
@@ -2221,6 +2255,77 @@ PQueue<T> &PQueue<T>::operator=(const PQueue<T> &Q)
         pqelements[i] = Q.pqelements[i];
     }
     return *this;
+}
+#endif
+#ifdef DS_SEQDEQUE_IMPLEMENTATION
+template <typename T>
+SeqDeque<T>::SeqDeque(int sz) : SeqQueue<T>(sz) {}
+template <typename T>
+SeqDeque<T>::SeqDeque(const SeqDeque<T> &Q) : SeqQueue<T>(Q) {}
+template <typename T>
+bool SeqDeque<T>::EnQueueHead(const T &x)
+{
+    if (IsFull())
+    {
+        std::cout << "Queue is full, EnQueueHead() failed" << std::endl;
+        return false;
+    }
+    this->front = (this->front - 1 + this->maxSize) % this->maxSize;
+    this->elements[this->front] = x;
+    return true;
+}
+template <typename T>
+bool SeqDeque<T>::DeQueueHead(T &x)
+{
+    return SeqQueue<T>::DeQueue(x);
+}
+template <typename T>
+bool SeqDeque<T>::EnQueueTail(const T &x)
+{
+    return SeqQueue<T>::EnQueue(x);
+}
+template <typename T>
+bool SeqDeque<T>::DeQueueTail(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, DeQueueTail() failed" << std::endl;
+        return false;
+    }
+    this->rear = (this->rear - 1 + this->maxSize) % this->maxSize;
+    x = this->elements[this->rear];
+    return true;
+}
+template <typename T>
+inline bool SeqDeque<T>::IsEmpty() const
+{
+    return SeqQueue<T>::IsEmpty();
+}
+template <typename T>
+inline bool SeqDeque<T>::IsFull() const
+{
+    return SeqQueue<T>::IsFull();
+}
+template <typename T>
+inline int SeqDeque<T>::getSize() const
+{
+    return SeqQueue<T>::getSize();
+}
+template <typename T>
+bool SeqDeque<T>::getHead(T &x)
+{
+    return SeqQueue<T>::getFront(x);
+}
+template <typename T>
+bool SeqDeque<T>::getTail(T &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Queue is empty, getTail() failed" << std::endl;
+        return false;
+    }
+    x = this->elements[(this->rear - 1 + this->maxSize) % this->maxSize];
+    return true;
 }
 #endif
 #endif // DATASTRUCTURE
