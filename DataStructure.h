@@ -387,6 +387,25 @@ public:
     bool IsEmpty() const override;
     bool IsFull() const override;
     int getSize() const override;
+
+    SeqDeque<T> &operator=(const SeqDeque<T> &Q);
+};
+template <typename T>
+class SymmetricMatrix
+{
+private:
+    int n;
+    T *B;
+
+public:
+    SymmetricMatrix(int n);
+    SymmetricMatrix(const SymmetricMatrix<T> &M);
+    ~SymmetricMatrix();
+    int size() const;
+    int index(int i, int j) const;
+
+    SymmetricMatrix<T> &operator=(const SymmetricMatrix<T> &M);
+    T &operator()(int i, int j);
 };
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
@@ -2312,6 +2331,29 @@ inline int SeqDeque<T>::getSize() const
     return SeqQueue<T>::getSize();
 }
 template <typename T>
+SeqDeque<T> &SeqDeque<T>::operator=(const SeqDeque<T> &Q)
+{
+    if (this == &Q)
+    {
+        return *this;
+    }
+    delete[] elements;
+    front = Q.front;
+    rear = Q.rear;
+    maxSize = Q.maxSize;
+    elements = new (std::nothrow) T[maxSize];
+    if (elements == nullptr)
+    {
+        std::cerr << "malloc memory failed for SeqDeQue.elements" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < maxSize; ++i)
+    {
+        elements[i] = Q.elements[i];
+    }
+    return *this;
+}
+template <typename T>
 bool SeqDeque<T>::getHead(T &x)
 {
     return SeqQueue<T>::getFront(x);
@@ -2326,6 +2368,94 @@ bool SeqDeque<T>::getTail(T &x)
     }
     x = this->elements[(this->rear - 1 + this->maxSize) % this->maxSize];
     return true;
+}
+#endif
+#ifdef DS_SYMMETRICMATRIX_IMPLEMENTATION
+template <typename T>
+SymmetricMatrix<T>::SymmetricMatrix(int n)
+{
+    this->n = n;
+    B = new (std::nothrow) T[n * (n + 1) / 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for SymmetricMatrix.B" << std::endl;
+        exit(1);
+    }
+}
+template <typename T>
+SymmetricMatrix<T>::SymmetricMatrix(const SymmetricMatrix<T> &M)
+{
+    n = M.n;
+    B = new (std::nothrow) T[n * (n + 1) / 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for SymmetricMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+}
+template <typename T>
+SymmetricMatrix<T>::~SymmetricMatrix()
+{
+    delete[] B;
+}
+template <typename T>
+int SymmetricMatrix<T>::size() const
+{
+    return n * (n + 1) / 2;
+}
+template <typename T>
+int SymmetricMatrix<T>::index(int i, int j) const
+{
+    if (i < 0 || i >= n || j < 0 || j >= n)
+    {
+        std::cerr << "(i , j) is out of index, get index(" << i << " , " << j << ") failed" << std::endl;
+        exit(1);
+    }
+    if (i >= j)
+    {
+        return i * (i + 1) / 2 + j;
+    }
+    else
+    {
+        return j * (j + 1) / 2 + i;
+    }
+}
+template <typename T>
+SymmetricMatrix<T> &SymmetricMatrix<T>::operator=(const SymmetricMatrix<T> &M)
+{
+    if (this == &M)
+    {
+        return *this;
+    }
+    delete[] B;
+    n = M.n;
+    B = new (std::nothrow) T[n * (n + 1) / 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for SymmetricMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+    return *this;
+}
+template <typename T>
+T &SymmetricMatrix<T>::operator()(int i, int j)
+{
+    if (i < 0 || i >= n || j < 0 || j >= n)
+    {
+        std::cerr << "(i , j) is out of index, get Matrix[" << i << "]" << "[" << j << "] failed" << std::endl;
+        exit(1);
+    }
+    return B[index(i, j)];
 }
 #endif
 #endif // DATASTRUCTURE
