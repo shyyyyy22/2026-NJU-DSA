@@ -5,8 +5,8 @@ If you wany to use one datastructure, following is an example:
 ```cpp
 #define DS_SINGLYLINKEDLIST_IMPLEMENTATION // To use SinglyLinkedList
 #include "DataStructure.h"
-// Code
 // You can use SinglyLinkedList now
+// Code...
 ```
 
 ## The DataStuuctures supported now (2026-09-20):
@@ -22,4 +22,5 @@ If you wany to use one datastructure, following is an example:
 9. PQueue
 10. SeqDeque
 11. SymmetricMatrix
+12. TriDiagonalMatrix
  

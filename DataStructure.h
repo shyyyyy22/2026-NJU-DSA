@@ -407,6 +407,23 @@ public:
     SymmetricMatrix<T> &operator=(const SymmetricMatrix<T> &M);
     T &operator()(int i, int j);
 };
+template <typename T>
+class TriDiagonalMatrix
+{
+private:
+    int n;
+    T *B;
+
+public:
+    TriDiagonalMatrix(int n);
+    TriDiagonalMatrix(const TriDiagonalMatrix<T> &M);
+    ~TriDiagonalMatrix();
+    int size() const;
+    int index(int i, int j) const;
+
+    TriDiagonalMatrix<T> &operator=(const TriDiagonalMatrix<T> &M);
+    T &operator()(int i, int j);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -2451,6 +2468,87 @@ template <typename T>
 T &SymmetricMatrix<T>::operator()(int i, int j)
 {
     if (i < 0 || i >= n || j < 0 || j >= n)
+    {
+        std::cerr << "(i , j) is out of index, get Matrix[" << i << "]" << "[" << j << "] failed" << std::endl;
+        exit(1);
+    }
+    return B[index(i, j)];
+}
+#endif
+#ifdef DS_TRIDIAGONALMATRIX_IMPLEMENTATION
+template <typename T>
+TriDiagonalMatrix<T>::TriDiagonalMatrix(int n)
+{
+    this->n = n;
+    B = new (std::nothrow) T[3 * n - 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for TriDiagonalMatrix.B" << std::endl;
+        exit(1);
+    }
+}
+template <typename T>
+TriDiagonalMatrix<T>::TriDiagonalMatrix(const TriDiagonalMatrix<T> &M)
+{
+    n = M.n;
+    B = new (std::nothrow) T[3 * n - 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for TriDiagonalMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+}
+template <typename T>
+TriDiagonalMatrix<T>::~TriDiagonalMatrix()
+{
+    delete[] B;
+}
+template <typename T>
+int TriDiagonalMatrix<T>::size() const
+{
+    return 3 * n - 2;
+}
+template <typename T>
+int TriDiagonalMatrix<T>::index(int i, int j) const
+{
+    if (i < 0 || i >= n || j < std::max(i - 1, 0) || j > std::min(i + 1, n - 1))
+    {
+        std::cerr << "(i , j) is out of index, get index(" << i << " , " << j << ") failed" << std::endl;
+        exit(1);
+    }
+    return 2 * i + j;
+}
+template <typename T>
+TriDiagonalMatrix<T> &TriDiagonalMatrix<T>::operator=(const TriDiagonalMatrix<T> &M)
+{
+    if (this == &M)
+    {
+        return *this;
+    }
+    delete[] B;
+    n = M.n;
+    B = new (std::nothrow) T[3 * n - 2];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for TriDiagonalMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+    return *this;
+}
+template <typename T>
+T &TriDiagonalMatrix<T>::operator()(int i, int j)
+{
+    if (i < 0 || i >= n || j < std::max(i - 1, 0) || j > std::min(i + 1, n - 1))
     {
         std::cerr << "(i , j) is out of index, get Matrix[" << i << "]" << "[" << j << "] failed" << std::endl;
         exit(1);
