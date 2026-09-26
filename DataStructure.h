@@ -424,6 +424,24 @@ public:
     TriDiagonalMatrix<T> &operator=(const TriDiagonalMatrix<T> &M);
     T &operator()(int i, int j);
 };
+template <typename T>
+class BandMatrix
+{
+private:
+    int n;
+    int b;
+    T *B;
+
+public:
+    BandMatrix(int n, int b);
+    BandMatrix(const BandMatrix<T> &M);
+    ~BandMatrix();
+    int size() const;
+    int index(int i, int j) const;
+
+    BandMatrix<T> &operator=(const BandMatrix<T> &M);
+    T &operator()(int i, int j);
+};
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
@@ -2549,6 +2567,90 @@ template <typename T>
 T &TriDiagonalMatrix<T>::operator()(int i, int j)
 {
     if (i < 0 || i >= n || j < std::max(i - 1, 0) || j > std::min(i + 1, n - 1))
+    {
+        std::cerr << "(i , j) is out of index, get Matrix[" << i << "]" << "[" << j << "] failed" << std::endl;
+        exit(1);
+    }
+    return B[index(i, j)];
+}
+#endif
+#ifdef DS_BANDMATRIX_IMPLEMENTATION
+template <typename T>
+BandMatrix<T>::BandMatrix(int n, int b)
+{
+    this->n = n;
+    this->b = b;
+    B = new (std::nothrow) T[n * (2 * b + 1)];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for BandMatrix.B" << std::endl;
+        exit(1);
+    }
+}
+template <typename T>
+BandMatrix<T>::BandMatrix(const BandMatrix<T> &M)
+{
+    n = M.n;
+    b = M.b;
+    B = new (std::nothrow) T[n * (2 * b + 1)];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for BandMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+}
+template <typename T>
+BandMatrix<T>::~BandMatrix()
+{
+    delete[] B;
+}
+template <typename T>
+int BandMatrix<T>::size() const
+{
+    return n * (2 * b + 1);
+}
+template <typename T>
+int BandMatrix<T>::index(int i, int j) const
+{
+    if (i >= n || i < 0 || j < std::max(i - b, 0) || j > std::min(i + b, n - 1))
+    {
+        std::cerr << "(i , j) is out of index, get index(" << i << " , " << j << ") failed" << std::endl;
+        exit(1);
+    }
+    return i * (2 * b + 1) + j - i + b;
+}
+template <typename T>
+BandMatrix<T> &BandMatrix<T>::operator=(const BandMatrix<T> &M)
+{
+    if (this == &M)
+    {
+        return *this;
+    }
+    delete[] B;
+    n = M.n;
+    b = M.b;
+    B = new (std::nothrow) T[n * (2 * b + 1)];
+    if (B == nullptr)
+    {
+        std::cerr << "malloc memory failed for BandMatrix.B" << std::endl;
+        exit(1);
+    }
+    int sz = size();
+    for (int i = 0; i < sz; ++i)
+    {
+        B[i] = M.B[i];
+    }
+    return *this;
+}
+template <typename T>
+T &BandMatrix<T>::operator()(int i, int j)
+{
+    if (i >= n || i < 0 || j < std::max(i - b, 0) || j > std::min(i + b, n - 1))
     {
         std::cerr << "(i , j) is out of index, get Matrix[" << i << "]" << "[" << j << "] failed" << std::endl;
         exit(1);

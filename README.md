@@ -9,7 +9,7 @@ If you wany to use one datastructure, following is an example:
 // Code...
 ```
 
-## The DataStuuctures supported now (2026-09-20):
+## The DataStuuctures supported now (2026-09-26):
 
 1. SeqList
 2. SinglyLinkedList
@@ -23,4 +23,5 @@ If you wany to use one datastructure, following is an example:
 10. SeqDeque
 11. SymmetricMatrix
 12. TriDiagonalMatrix
+13. BandMatrix
  
