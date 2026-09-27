@@ -442,7 +442,48 @@ public:
     BandMatrix<T> &operator=(const BandMatrix<T> &M);
     T &operator()(int i, int j);
 };
+template <typename T>
+class SparseMatrix
+{
+private:
+    typedef struct Triple
+    {
+    private:
+        int row;
+        int col;
+        T value;
 
+    public:
+        Triple &operator=(const Triple &x)
+        {
+            if (this == &x)
+            {
+                return *this;
+            }
+            row = x.row;
+            col = x.col;
+            value = x.value;
+            return *this;
+        }
+    };
+    int rows, cols, terms;
+    Triple<T> *elem;
+    int maxTerms;
+
+    void Swap(SparseMatrix<T> &other);
+
+public:
+    SparseMatrix(int maxSize = 64);
+    SparseMatrix(int rows, int cols, int maxSize);
+    SparseMatrix(const SparseMatrix<T> &M);
+    ~SparseMatrix();
+    void Add(const SparseMatrix<T> &b);
+    void Multiply(const SparseMatrix<T> &b);
+    void Transpose();
+    void FastTranspose();
+
+    SparseMatrix<T> &operator=(const SparseMatrix<T> &M);
+};
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
 SeqList<T>::SeqList(int size)
@@ -2656,6 +2697,256 @@ T &BandMatrix<T>::operator()(int i, int j)
         exit(1);
     }
     return B[index(i, j)];
+}
+#endif
+#ifdef DS_SPARSEMATRIX_IMPLEMENTATION
+template <typename T>
+void SparseMatrix<T>::Swap(SparseMatrix<T> &other)
+{
+    std::swap(rows, other.rows);
+    std::swap(cols, other.cols);
+    std::swap(terms, other.terms);
+    std::swap(maxTerms, other.maxTerms);
+    std::swap(elem, other.elem);
+}
+template <typename T>
+SparseMatrix<T>::SparseMatrix(int maxSize)
+{
+    maxTerms = maxSize;
+    elem = new (std::nothrow) Triple<T>[maxTerms];
+    if (elem == nullptr)
+    {
+        std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
+        exit(1);
+    }
+    rows = cols = terms = 0;
+}
+template <typename T>
+SparseMatrix<T>::SparseMatrix(int rows, int cols, int maxSize)
+{
+    maxTerms = maxSize;
+    elem = new (std::nothrow) Triple<T>[maxTerms];
+    if (elem == nullptr)
+    {
+        std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
+        exit(1);
+    }
+    this->rows = rows;
+    this->cols = cols;
+    terms = 0;
+}
+template <typename T>
+SparseMatrix<T>::SparseMatrix(const SparseMatrix<T> &M)
+{
+    maxTerms = M.maxTerms;
+    elem = new (std::nothrow) Triple<T>[maxTerms];
+    if (elem == nullptr)
+    {
+        std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
+        exit(1);
+    }
+    rows = M.rows;
+    cols = M.cols;
+    terms = M.terms;
+    for (int i = 0; i < terms; ++i)
+    {
+        elem[i] = M.elem[i];
+    }
+}
+template <typename T>
+SparseMatrix<T>::~SparseMatrix()
+{
+    delete[] elem;
+}
+template <typename T>
+void SparseMatrix<T>::Add(const SparseMatrix<T> &b)
+{
+    if (rows != b.rows || cols != b.cols)
+    {
+        std::cout << "The dimension of matrixs is not same, Add() failed" << std::endl;
+        return;
+    }
+    SparseMatrix<T> tmp(rows, cols, terms + b.terms);
+    int i = 0, j = 0, k = 0, index_a, index_b;
+    while (i < terms && j < b.terms)
+    {
+        index_a = elem[i].row * cols + elem[i].col;
+        index_b = b.elem[j].row * b.cols + b.elem[j].col;
+        if (index_a < index_b)
+        {
+            tmp.elem[k++] = elem[i++];
+        }
+        else if (index_a == index_b)
+        {
+            T sum = elem[i].value + b.elem[j].value;
+            if (sum != T())
+            {
+                tmp.elem[k].row = elem[i].row;
+                tmp.elem[k].col = elem[i].col;
+                tmp.elem[k].value = sum;
+                k++;
+            }
+            i++;
+            j++;
+        }
+        else
+        {
+            tmp.elem[k++] = b.elem[j++];
+        }
+    }
+    while (i < terms)
+    {
+        tmp.elem[k++] = elem[i++];
+    }
+    while (j < b.terms)
+    {
+        tmp.elem[k++] = b.elem[j++];
+    }
+    tmp.terms = k;
+
+    Swap(tmp);
+}
+template <typename T>
+void SparseMatrix<T>::Multiply(const SparseMatrix<T> &b)
+{
+    if (cols != b.rows)
+    {
+        std::cout << "The matrix's cols must match other's rows, Multiply() failed" << std::endl;
+        return;
+    }
+    SparseMatrix<T> result(rows, b.cols, rows * b.cols);
+    for (int i = 0; i < rows; ++i)
+    {
+        T *tmp = new (std::nothrow) T[b.cols]();
+        if (tmp == nullptr)
+        {
+            std::cerr << "malloc memory failed for SparseMatrix.tmp" << std::endl;
+            exit(1);
+        }
+        for (int pa = 0; pa < terms; ++pa)
+        {
+            if (elem[pa].row != i)
+            {
+                continue;
+            }
+            int k = elem[pa].col;
+            T a_ik = elem[pa].value;
+
+            for (int pb = 0; pb < b.terms; ++pb)
+            {
+                if (b.elem[pb].row != k)
+                {
+                    continue;
+                }
+                int j = b.elem[pb].col;
+                tmp[j] += a_ik * b.elem[pb].value;
+            }
+        }
+
+        for (int j = 0; j < b.cols; ++j)
+        {
+            if (tmp[j] != T())
+            {
+                result.elem[result.terms].row = i;
+                result.elem[result.terms].col = j;
+                result.elem[result.terms].value = tmp[j];
+                result.terms++;
+            }
+        }
+
+        delete[] tmp;
+    }
+
+    Swap(result);
+}
+template <typename T>
+void SparseMatrix<T>::Transpose()
+{
+    SparseMatrix<T> result(cols, rows, terms);
+    for (int k = 0; k < cols; ++k)
+    {
+        for (int i = 0; i < terms; ++i)
+        {
+            if (elem[i].col == k)
+            {
+                result.elem[result.terms].row = k;
+                result.elem[result.terms].col = elem[i].row;
+                result.elem[result.terms].value = elem[i].value;
+                result.terms++;
+            }
+        }
+    }
+    Swap(result);
+}
+template <typename T>
+void SparseMatrix<T>::FastTranspose()
+{
+    SparseMatrix result(cols, rows, terms);
+    int *rowSize = new (std::nothrow) int[cols];
+    if (rowSize == nullptr)
+    {
+        std::cerr << "malloc memory failed for SparseMatrix.rowSize" << std::endl;
+        exit(1);
+    }
+    int *rowStart = new (std::nothrow) int[cols];
+    if (rowStart == nullptr)
+    {
+        std::cerr << "malloc memory failed for SparseMatrix.rowStart" << std::endl;
+        exit(1);
+    }
+
+    for (int i = 0; i < cols; ++i)
+    {
+        rowSize[i] = 0;
+    }
+    for (int i = 0; i < terms; ++i)
+    {
+        rowSize[elem[i].col]++;
+    }
+    rowStart[0] = 0;
+    for (int i = 1; i < cols; ++i)
+    {
+        rowStart[i] = rowStart[i - 1] + rowSize[i - 1];
+    }
+
+    for (int i = 0; i < terms; ++i)
+    {
+        int start = rowStart[elem[i].col];
+        result.elem[start].row = elem[i].col;
+        result.elem[start].col = elem[i].row;
+        result.elem[start].value = elem[i].value;
+        rowStart[elem[i].col]++;
+    }
+    delete[] rowSize;
+    delete[] rowStart;
+
+    Swap(result);
+}
+
+template <typename T>
+SparseMatrix<T> &SparseMatrix<T>::operator=(const SparseMatrix<T> &M)
+{
+    if (this == &M)
+    {
+        return *this;
+    }
+    delete[] elem;
+
+    rows = M.rows;
+    cols = M.cols;
+    terms = M.terms;
+    maxTerms = M.maxTerms;
+    elem = new (std::nothrow) Triple<T>[maxTerms];
+    if (elem == nullptr)
+    {
+        std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < terms; ++i)
+    {
+        elem[i] = M.elem[i];
+    }
+    return *this;
 }
 #endif
 #endif // DATASTRUCTURE
