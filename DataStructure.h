@@ -2,6 +2,7 @@
 #define DATASTRUCTURE
 #include <iostream>
 #include <algorithm>
+#include <Algorithms.h>
 template <typename T>
 class LinearList
 {
@@ -516,7 +517,51 @@ public:
 
     OrthogonalList<T> &operator=(const OrthogonalList<T> &M);
 };
+class String
+{
+private:
+    char *ch;
+    int curLength;
+    int maxSize;
 
+    void overflowProcess();
+
+public:
+    String(int sz = 128);
+    String(const char *init);
+    String(const String &ob);
+    ~String();
+    int Length() const;
+    bool IsEmpty() const;
+    int Find_BF(const String &pat, int k = 0) const;
+    int Find_KMP(const String &pat, int k = 0) const;
+
+    String operator()(int pos, int len) const;
+    bool operator==(const String &ob) const;
+    bool operator!=(const String &ob) const;
+    bool operator!() const;
+    String &operator=(const String &ob);
+    String &operator=(const char *init);
+    String &operator+=(const String &ob);
+    char &operator[](int i);
+    char operator[](int i) const;
+
+    friend std::ostream &operator<<(std::ostream &os, const String &S)
+    {
+        for (int i = 0; i < S.curLength; ++i)
+        {
+            os << S.ch[i];
+        }
+        return os;
+    }
+    friend std::istream &operator>>(std::istream &is, String &S)
+    {
+        char buffer[1024];
+        is >> buffer;
+        S = buffer;
+        return is;
+    }
+};
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
 SeqList<T>::SeqList(int size)
@@ -3452,6 +3497,228 @@ OrthogonalList<T> &OrthogonalList<T>::operator=(const OrthogonalList<T> &M)
     OrthogonalList<T> tmp(M);
     Swap(tmp);
     return *this;
+}
+#endif
+#ifdef DS_STRING_IMPLEMENTATION
+void String::overflowProcess()
+{
+    maxSize *= 2;
+    char *newCh = new (std::nothrow) char[maxSize + 1];
+    if (newCh == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.newCh" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i <= curLength; ++i)
+    {
+        newCh[i] = ch[i];
+    }
+    delete[] ch;
+    ch = newCh;
+}
+String::String(int sz)
+{
+    if (sz < 0)
+    {
+        sz = 128;
+    }
+    maxSize = sz;
+    ch = new (std::nothrow) char[maxSize + 1];
+    if (ch == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.ch" << std::endl;
+        exit(1);
+    }
+    curLength = 0;
+    ch[0] = '\0';
+}
+String::String(const char *init)
+{
+    maxSize = curLength = strlen(init);
+    ch = new (std::nothrow) char[maxSize + 1];
+    if (ch == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.ch" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < curLength; ++i)
+    {
+        ch[i] = init[i];
+    }
+    ch[curLength] = '\0';
+}
+String::String(const String &ob)
+{
+    maxSize = ob.maxSize;
+    curLength = ob.curLength;
+    ch = new (std::nothrow) char[maxSize + 1];
+    if (ch == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.ch" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < curLength; ++i)
+    {
+        ch[i] = ob.ch[i];
+    }
+    ch[curLength] = '\0';
+}
+String::~String()
+{
+    delete[] ch;
+}
+int String::Length() const
+{
+    return curLength;
+}
+bool String::IsEmpty() const
+{
+    return curLength == 0;
+}
+int String::Find_BF(const String &pat, int k = 0) const
+{
+    if (k < 0 || k > curLength - 1)
+    {
+        std::cout << "index is out of range, Find_BF() failed" << std::endl;
+        return -1;
+    }
+    if (pat.curLength == 0)
+    {
+        return k;
+    }
+    int pos = BF(ch + k, pat.ch);
+    return pos == -1 ? -1 : k + pos;
+}
+int String::Find_KMP(const String &pat, int k = 0) const
+{
+    if (k < 0 || k > curLength - 1)
+    {
+        std::cout << "index is out of range, Find_KMP() failed" << std::endl;
+        return -1;
+    }
+    if (pat.curLength == 0)
+    {
+        return k;
+    }
+    int len = strlen(pat.ch);
+    int *next = new (std::nothrow) int[len];
+    if (next == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.next" << std::endl;
+        exit(1);
+    }
+    GetNext(pat.ch, next);
+    int pos = KMP(ch + k, pat.ch, next);
+    delete[] next;
+    return pos == -1 ? -1 : k + pos;
+}
+String String::operator()(int pos, int len) const
+{
+    if (pos < 0 || pos > curLength - 1)
+    {
+        std::cout << "pos is out of range, get substr(" << pos << ", " << len << ") failed" << std::endl;
+        return String();
+    }
+    if (len < 0)
+    {
+        std::cout << "len is less than 0, get substr(" << pos << ", " << len << ") failed" << std::endl;
+        return String();
+    }
+    if (pos + len - 1 > curLength - 1)
+    {
+        len = curLength - pos;
+    }
+    String result(len);
+    for (int i = 0; i < len; ++i)
+    {
+        result.ch[i] = ch[pos + i];
+    }
+    result.ch[len] = '\0';
+    result.curLength = len;
+    return result;
+}
+bool String::operator==(const String &ob) const
+{
+    return strcmp(ch, ob.ch) == 0;
+}
+bool String::operator!=(const String &ob) const
+{
+    return strcmp(ch, ob.ch) != 0;
+}
+bool String::operator!() const
+{
+    return curLength == 0;
+}
+String &String::operator=(const String &ob)
+{
+    if (this == &ob)
+    {
+        return *this;
+    }
+    delete[] ch;
+    maxSize = ob.maxSize;
+    curLength = ob.curLength;
+    ch = new (std::nothrow) char[maxSize + 1];
+    if (ch == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.ch" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < curLength; ++i)
+    {
+        ch[i] = ob.ch[i];
+    }
+    ch[curLength] = '\0';
+    return *this;
+}
+String &String::operator=(const char *init)
+{
+    delete[] ch;
+    maxSize = curLength = strlen(init);
+    ch = new (std::nothrow) char[maxSize + 1];
+    if (ch == nullptr)
+    {
+        std::cerr << "malloc memory faied for String.ch" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < curLength; ++i)
+    {
+        ch[i] = init[i];
+    }
+    ch[curLength] = '\0';
+    return *this;
+}
+String &String::operator+=(const String &ob)
+{
+    while (ob.curLength + curLength > maxSize)
+    {
+        overflowProcess();
+    }
+    for (int i = 0; i < ob.curLength; ++i)
+    {
+        ch[curLength + i] = ob.ch[i];
+    }
+    curLength += ob.curLength;
+    ch[curLength] = '\0';
+    return *this;
+}
+char &String::operator[](int i)
+{
+    if (i < 0 || i > curLength - 1)
+    {
+        std::cerr << "index is out of range, get String[" << i << "] failed" << std::endl;
+        exit(1);
+    }
+    return ch[i];
+}
+char String::operator[](int i) const
+{
+    if (i < 0 || i > curLength - 1)
+    {
+        std::cerr << "index is out of range, get String[" << i << "] failed" << std::endl;
+        exit(1);
+    }
+    return ch[i];
 }
 #endif
 #endif // DATASTRUCTURE
