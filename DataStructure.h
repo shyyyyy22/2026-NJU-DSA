@@ -484,6 +484,39 @@ public:
 
     SparseMatrix<T> &operator=(const SparseMatrix<T> &M);
 };
+template <typename T>
+class OrthogonalList
+{
+private:
+    typedef struct OLNode
+    {
+        int row, col;
+        T value;
+        OLNode *right;
+        OLNode *down;
+    } OLNode;
+    int rows, cols;
+    OLNode *head;
+
+    void Swap(OrthogonalList<T> &other);
+    OLNode *getRowHead(int i) const;
+    OLNode *getColHead(int j) const;
+
+public:
+    OrthogonalList(int rows, int cols);
+    OrthogonalList(const OrthogonalList<T> &M);
+    ~OrthogonalList();
+    void Insert(int i, int j, const T &v);
+    void Remove(int i, int j);
+    T get(int i, int j) const;
+    void Transpose();
+    void Add(const OrthogonalList<T> &b);
+    void Multiply(const OrthogonalList<T> &b);
+    int NonZeroCount() const;
+
+    OrthogonalList<T> &operator=(const OrthogonalList<T> &M);
+};
+
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
 SeqList<T>::SeqList(int size)
@@ -2946,6 +2979,478 @@ SparseMatrix<T> &SparseMatrix<T>::operator=(const SparseMatrix<T> &M)
     {
         elem[i] = M.elem[i];
     }
+    return *this;
+}
+#endif
+#ifdef DS_ORTHOGONALLIST_IMPLEMENTATION
+template <typename T>
+void OrthogonalList<T>::Swap(OrthogonalList<T> &other)
+{
+    std::swap(rows, other.rows);
+    std::swap(cols, other.cols);
+    std::swap(head, other.head);
+}
+template <typename T>
+typename OrthogonalList<T>::OLNode *OrthogonalList<T>::getRowHead(int i) const
+{
+    if (i < 0 || i >= rows)
+    {
+        std::cerr << "index is of of range, getRowHead() failed" << std::endl;
+        exit(1);
+    }
+    OLNode *p = head->down;
+    for (int k = 0; k < i; ++k)
+    {
+        p = p->down;
+    }
+    return p;
+}
+template <typename T>
+typename OrthogonalList<T>::OLNode *OrthogonalList<T>::getColHead(int j) const
+{
+    if (j < 0 || j >= cols)
+    {
+        std::cerr << "index is of of range, getColHead() failed" << std::endl;
+        exit(1);
+    }
+    OLNode *p = head->right;
+    for (int k = 0; k < j; ++k)
+    {
+        p = p->right;
+    }
+    return p;
+}
+template <typename T>
+OrthogonalList<T>::OrthogonalList(int rows, int cols)
+{
+    this->rows = rows;
+    this->cols = cols;
+    head = new (std::nothrow) OLNode;
+    if (head == nullptr)
+    {
+        cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
+        exit(1);
+    }
+    OLNode *p = head;
+    for (int i = 0; i < rows; ++i)
+    {
+        OLNode *rhead = new (std::nothrow) OLNode;
+        if (rhead == nullptr)
+        {
+            cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
+            exit(1);
+        }
+        rhead->row = i;
+        rhead->col = -1;
+        rhead->right = rhead;
+        p->down = rhead;
+        p = p->down;
+    }
+    p->down = head;
+
+    p = head;
+    for (int i = 0; i < cols; ++i)
+    {
+        OLNode *chead = new (std::nothrow) OLNode;
+        if (chead == nullptr)
+        {
+            cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
+            exit(1);
+        }
+        chead->row = -1;
+        chead->col = i;
+        chead->down = chead;
+        p->right = chead;
+        p = p->right;
+    }
+    p->right = head;
+}
+template <typename T>
+OrthogonalList<T>::OrthogonalList(const OrthogonalList<T> &M)
+{
+    rows = M.rows;
+    cols = M.cols;
+    head = new (std::nothrow) OLNode;
+    if (head == nullptr)
+    {
+        cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
+        exit(1);
+    }
+    OLNode *p = head;
+    for (int i = 0; i < cols; ++i)
+    {
+        OLNode *chead = new (std::nothrow) OLNode;
+        if (chead == nullptr)
+        {
+            cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
+            exit(1);
+        }
+        chead->row = -1;
+        chead->col = i;
+        chead->down = chead;
+        p->right = chead;
+        p = p->right;
+    }
+    p->right = head;
+
+    p = head;
+    OLNode *q = M.head->down;
+    for (int i = 0; i < rows; ++i)
+    {
+        OLNode *rhead = new (std::nothrow) OLNode;
+        if (rhead == nullptr)
+        {
+            cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
+            exit(1);
+        }
+        OLNode *cur = q->right, *node = rhead;
+        while (cur != q)
+        {
+            node->right = new (std::nothrow) OLNode;
+            if (node->right == nullptr)
+            {
+                cerr << "malloc memory failed for OrthogonalList.node->right" << std::endl;
+                exit(1);
+            }
+            node = node->right;
+            node->row = cur->row;
+            node->col = cur->col;
+            node->value = cur->value;
+            cur = cur->right;
+            OLNode *c = getColHead(node->col);
+            OLNode *cnode = c;
+            while (cnode->down != c)
+            {
+                cnode = cnode->down;
+            }
+            cnode->down = node;
+            node->down = c;
+        }
+        node->right = rhead;
+        p->down = rhead;
+        p = p->down;
+        q = q->down;
+        rhead->row = i;
+        rhead->col = -1;
+    }
+    p->down = head;
+}
+template <typename T>
+OrthogonalList<T>::~OrthogonalList()
+{
+    OLNode *p = head->down;
+    for (int i = 0; i < rows; ++i)
+    {
+        OLNode *q = p->right;
+        while (q != p)
+        {
+            OLNode *del = q;
+            q = del->right;
+            delete del;
+        }
+        p = p->down;
+        delete q;
+    }
+    p = head->right;
+    while (p != head)
+    {
+        OLNode *del = p;
+        p = del->right;
+        delete del;
+    }
+    delete head;
+}
+template <typename T>
+void OrthogonalList<T>::Insert(int i, int j, const T &v)
+{
+    if (i < 0 || i >= rows || j < 0 || j >= cols)
+    {
+        std::cout << "index is out of range, Insert() failed" << std::endl;
+        return;
+    }
+    OLNode *rp = getRowHead(i);
+    OLNode *p = rp->right, *prev = rp;
+    while (p != rp)
+    {
+        if (p->col == j)
+        {
+            p->value = v;
+            prev = nullptr;
+            break;
+        }
+        else if (p->col < j)
+        {
+            prev = p;
+            p = p->right;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (prev != nullptr)
+    {
+        prev->right = new (std::nothrow) OLNode;
+        if (prev->right == nullptr)
+        {
+            std::cerr << "malloc memory failed for OrthogonalList.prev->right" << std::endl;
+            exit(1);
+        }
+        OLNode *node = prev->right;
+        node->row = i;
+        node->col = j;
+        node->value = v;
+        node->right = p;
+        OLNode *cp = getColHead(j);
+        p = cp->down, prev = cp;
+        while (p != cp)
+        {
+            if (p->row < i)
+            {
+                prev = p;
+                p = p->down;
+            }
+            else
+            {
+                break;
+            }
+        }
+        prev->down = node;
+        node->down = p;
+    }
+}
+template <typename T>
+void OrthogonalList<T>::Remove(int i, int j)
+{
+    if (i < 0 || i >= rows || j < 0 || j >= cols)
+    {
+        std::cout << "index is out of range, Remove() failed" << std::endl;
+        return;
+    }
+    bool found = false;
+    OLNode *rp = getRowHead(i);
+    OLNode *p = rp->right, *prev = rp;
+    while (p != rp)
+    {
+        if (p->col == j)
+        {
+            prev->right = p->right;
+            found = true;
+            break;
+        }
+        else
+        {
+            if (p->col > j)
+            {
+                break;
+            }
+            p = p->right;
+        }
+    }
+    if (found)
+    {
+        OLNode *del = p;
+        OLNode *cp = getColHead(j);
+        p = cp->down;
+        prev = cp;
+        while (p != cp)
+        {
+            if (p->row == i)
+            {
+                prev->down = p->down;
+                break;
+            }
+            else
+            {
+                prev = p;
+                p = p->down;
+            }
+        }
+        delete del;
+        return;
+    }
+    else
+    {
+        std::cout << "not found Matrix[ " << i << ", " << j << " ], Remove() failed" << std::endl;
+        return;
+    }
+}
+template <typename T>
+T OrthogonalList<T>::get(int i, int j) const
+{
+    if (i < 0 || i >= rows || j < 0 || j >= cols)
+    {
+        std::cout << "index is of of range, get() failed" << std::endl;
+        return;
+    }
+    bool found = false;
+    OLNode *rp = getRowHead(i);
+    OLNode *p = rp->right;
+    while (p != rp)
+    {
+        if (p->col == j)
+        {
+            found = true;
+            break;
+        }
+        else
+        {
+            if (p->col > j)
+            {
+                break;
+            }
+            p = p->right;
+        }
+    }
+    if (found)
+    {
+        return p->value;
+    }
+    else
+    {
+        return T();
+    }
+}
+template <typename T>
+void OrthogonalList<T>::Transpose()
+{
+    OrthogonalList<T> tmp(cols, rows);
+    OLNode *rp = head->down;
+    while (rp != head)
+    {
+        OLNode *node = rp->right;
+        while (node != rp)
+        {
+            tmp.Insert(node.col, node.row, node.value);
+            node = node->right;
+        }
+        rp = rp->down;
+    }
+    Swap(tmp);
+}
+template <typename T>
+void OrthogonalList<T>::Add(const OrthogonalList<T> &b)
+{
+    if (rows != b.rows || cols != b.cols)
+    {
+        std::cout << "The dimension of matrixs is not same, Add() failed" << std::endl;
+        return;
+    }
+    OrthogonalList<T> result(rows, cols);
+    OLNode *arp = head->down, *brp = b.head->down;
+    while (arp != head)
+    {
+        OLNode *a_node = arp->right, *b_node = brp->right;
+        while (a_node != arp && b_node != brp)
+        {
+            if (a_node->col < b_node->col)
+            {
+                result.Insert(a_node->row, a_node->col, a_node->value);
+                a_node = a_node->right;
+            }
+            else if (a_node->col == b_node->col)
+            {
+                T sum = a_node->value + b_node->value;
+                if (sum != T())
+                {
+                    result.Insert(a_node->row, a_node->col, sum);
+                }
+                a_node = a_node->right;
+                b_node = b_node->right;
+            }
+            else
+            {
+                result.Insert(b_node->row, b_node->col, b_node->value);
+                b_node = b_node->right;
+            }
+        }
+        while (a_node != arp)
+        {
+            result.Insert(a_node->row, a_node->col, a_node->value);
+            a_node = a_node->right;
+        }
+        while (b_node != brp)
+        {
+            result.Insert(b_node->row, b_node->col, b_node->value);
+            b_node = b_node->right;
+        }
+        arp = arp->down;
+        brp = brp->down;
+    }
+    Swap(result);
+}
+template <typename T>
+void OrthogonalList<T>::Multiply(const OrthogonalList<T> &b)
+{
+    if (cols != b.rows)
+    {
+        std::cout << "The matrix's cols must match other's rows, Multiply() failed" << std::endl;
+        return;
+    }
+    OrthogonalList<T> result(rows, b.cols);
+    OLNode *rp = head->down;
+    while (rp != head)
+    {
+        OLNode *node = rp->right;
+        T *tmp = new (std::nothrow) T[b.cols]();
+        if (tmp == nullptr)
+        {
+            std::cerr << "malloc memory failed for OrthogonalList.tmp" << std::endl;
+            exit(1);
+        }
+        while (node != rp)
+        {
+            int k = node->col;
+            T a_ik = node->value;
+            OLNode *brp = b.getRowHead(k);
+            OLNode *b_node = brp->right;
+            while (b_node != brp)
+            {
+                int j = b_node->col;
+                tmp[j] += a_ik * b_node->value;
+                b_node = b_node->right;
+            }
+            node = node->right;
+        }
+        for (int i = 0; i < b.cols; ++i)
+        {
+            if (tmp[i] != T())
+            {
+                result.Insert(node->row, i, tmp[i]);
+            }
+        }
+        delete[] tmp;
+        rp = rp->down;
+    }
+
+    Swap(result);
+}
+template <typename T>
+int OrthogonalList<T>::NonZeroCount() const
+{
+    int count = 0;
+    OLNode *rp = head->down;
+    while (rp != head)
+    {
+        OLNode *node = rp->right;
+        while (node != rp)
+        {
+            count++;
+            node = node->right;
+        }
+        rp = rp->down;
+    }
+    return count;
+}
+template <typename T>
+OrthogonalList<T> &OrthogonalList<T>::operator=(const OrthogonalList<T> &M)
+{
+    if (this == &M)
+    {
+        return *this;
+    }
+    OrthogonalList<T> tmp(M);
+    Swap(tmp);
     return *this;
 }
 #endif
