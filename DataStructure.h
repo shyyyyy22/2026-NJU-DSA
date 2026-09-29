@@ -2,7 +2,7 @@
 #define DATASTRUCTURE
 #include <iostream>
 #include <algorithm>
-#include <Algorithms.h>
+#include "Algorithms.h"
 template <typename T>
 class LinearList
 {
@@ -466,9 +466,9 @@ private:
             value = x.value;
             return *this;
         }
-    };
+    } Triple;
     int rows, cols, terms;
-    Triple<T> *elem;
+    Triple *elem;
     int maxTerms;
 
     void Swap(SparseMatrix<T> &other);
@@ -560,6 +560,56 @@ public:
         is >> buffer;
         S = buffer;
         return is;
+    }
+};
+class GenList
+{
+private:
+    typedef enum
+    {
+        HEADNODE,
+        VALUENODE,
+        SUBLISTNODE
+    } NODETYPE;
+    typedef struct GenListNode
+    {
+        NODETYPE utype;
+        union
+        {
+            int ref;
+            char value;
+            GenListNode *hlink;
+        } info;
+        GenListNode *tlink;
+    } GenListNode;
+    GenListNode *first;
+
+    GenListNode *Copy(GenListNode *ls) const;
+    int Length(GenListNode *ls) const;
+    int Depth(GenListNode *ls) const;
+    bool Equal(GenListNode *s, GenListNode *t) const;
+    void Remove(GenListNode *ls) const;
+    void CreateList(const char *&s, GenListNode *&ls);
+    void Output(std::ostream &os, GenListNode *ls) const;
+
+public:
+    GenList();
+    GenList(const char *s);
+    GenList(const GenList &L);
+    ~GenList();
+    bool Head(char &x) const;
+    bool Head(GenList &x) const;
+    bool Tail(GenList &x) const;
+    int Length() const;
+    int Depth() const;
+    bool Equal(const GenList &L) const;
+
+    GenList &operator=(const GenList &L);
+
+    friend std::ostream &operator<<(std::ostream &os, const GenList &L)
+    {
+        L.Output(os, L.first);
+        return os;
     }
 };
 #ifdef DS_SEQLIST_IMPLEMENTATION
@@ -3719,6 +3769,301 @@ char String::operator[](int i) const
         exit(1);
     }
     return ch[i];
+}
+#endif
+#ifdef DS_GENLIST_IMPLEMENTATION
+GenList::GenListNode *GenList::Copy(GenListNode *ls) const
+{
+    GenListNode *p = nullptr;
+    if (ls != nullptr)
+    {
+        p = new (std::nothrow) GenListNode;
+        if (p == nullptr)
+        {
+            std::cerr << "malloc memory failed for GenList.p" << std::endl;
+            exit(1);
+        }
+        p->utype = ls->utype;
+        switch (ls->utype)
+        {
+        case HEADNODE:
+            p->info.ref = 1;
+            break;
+        case VALUENODE:
+            p->info.value = ls->info.value;
+            break;
+        case SUBLISTNODE:
+            p->info.hlink = Copy(ls->info.hlink);
+            break;
+        }
+        p->tlink = Copy(ls->tlink);
+    }
+    return p;
+}
+int GenList::Length(GenListNode *ls) const
+{
+    int count = 0;
+    GenListNode *p = ls->tlink;
+    while (p != nullptr)
+    {
+        count++;
+        p = p->tlink;
+    }
+    return count;
+}
+int GenList::Depth(GenListNode *ls) const
+{
+    int depth = 0, n = 0;
+    GenListNode *p = ls->tlink;
+    if (p == nullptr)
+    {
+        return 1;
+    }
+    while (p != nullptr)
+    {
+        if (p->utype == SUBLISTNODE)
+        {
+            n = Depth(p->info.hlink);
+            if (depth < n)
+            {
+                depth = n;
+            }
+        }
+        p = p->tlink;
+    }
+    return depth + 1;
+}
+bool GenList::Equal(GenListNode *s, GenListNode *t) const
+{
+    GenListNode *ps = s->tlink, *pt = t->tlink;
+    while (ps != nullptr && pt != nullptr)
+    {
+        if (ps->utype != pt->utype)
+        {
+            return false;
+        }
+        if (ps->utype == VALUENODE)
+        {
+            if (ps->info.value != pt->info.value)
+            {
+                return false;
+            }
+        }
+        if (ps->utype == SUBLISTNODE)
+        {
+            if (!Equal(ps->info.hlink, pt->info.hlink))
+            {
+                return false;
+            }
+        }
+        ps = ps->tlink;
+        pt = pt->tlink;
+    }
+    return ps == nullptr && pt == nullptr;
+}
+void GenList::Remove(GenListNode *ls) const
+{
+    if (ls == nullptr)
+    {
+        return;
+    }
+    ls->info.ref--;
+    if (ls->info.ref <= 0)
+    {
+        GenListNode *p = ls->tlink;
+        while (p != nullptr)
+        {
+            if (p->utype == SUBLISTNODE)
+            {
+                Remove(p->info.hlink);
+            }
+            GenListNode *del = p;
+            p = p->tlink;
+            delete del;
+        }
+        delete ls;
+    }
+}
+void GenList::CreateList(const char *&s, GenListNode *&ls)
+{
+    ls = new (std::nothrow) GenListNode;
+    if (ls == nullptr)
+    {
+        std::cerr << "malloc memory failed for GenList.ls" << std::endl;
+        exit(1);
+    }
+    ls->utype = HEADNODE;
+    ls->info.ref = 1;
+    ls->tlink = nullptr;
+
+    if (*s == '(')
+    {
+        s++;
+    }
+    GenListNode *tail = ls;
+    while (*s != '\0' && *s != ')')
+    {
+        if (*s == ',')
+        {
+            s++;
+            continue;
+        }
+        GenListNode *node = new (std::nothrow) GenListNode;
+        if (node == nullptr)
+        {
+            std::cerr << "malloc memory failed for GenList.node" << std::endl;
+            exit(1);
+        }
+        if (*s == '(')
+        {
+            node->utype = SUBLISTNODE;
+            node->info.hlink = nullptr;
+            CreateList(s, node->info.hlink);
+            s++;
+        }
+        else
+        {
+            node->utype = VALUENODE;
+            node->info.value = *s;
+            s++;
+        }
+        node->tlink = nullptr;
+        tail->tlink = node;
+        tail = node;
+    }
+}
+void GenList::Output(std::ostream &os, GenListNode *ls) const
+{
+    GenListNode *p = ls->tlink;
+    os << "(";
+    while (p != nullptr)
+    {
+        if (p->utype == VALUENODE)
+        {
+            os << p->info.value;
+        }
+        if (p->utype == SUBLISTNODE)
+        {
+            Output(os, p->info.hlink);
+        }
+        if (p->tlink != nullptr)
+        {
+            os << ",";
+        }
+        p = p->tlink;
+    }
+    os << ")";
+    return;
+}
+GenList::GenList()
+{
+    first = new (std::nothrow) GenListNode;
+    if (first == nullptr)
+    {
+        std::cerr << "malloc memory failed for GenList.first" << std::endl;
+        exit(1);
+    }
+    first->utype = HEADNODE;
+    first->info.ref = 1;
+    first->tlink = nullptr;
+}
+GenList::GenList(const char *s)
+{
+    CreateList(s, first);
+}
+GenList::GenList(const GenList &L)
+{
+    first = Copy(L.first);
+}
+GenList::~GenList()
+{
+    Remove(first);
+}
+bool GenList::Head(char &x) const
+{
+    if (first->tlink == nullptr)
+    {
+        std::cout << "GenList is empty, get head failed" << std::endl;
+        return false;
+    }
+    if (first->tlink->utype != VALUENODE)
+    {
+        std::cout << "The GenList' head is not a value, x should be GenList type" << std::endl;
+        return false;
+    }
+    else
+    {
+        x = first->tlink->info.value;
+        return true;
+    }
+}
+bool GenList::Head(GenList &x) const
+{
+    if (first->tlink == nullptr)
+    {
+        std::cout << "GenList is empty, get head failed" << std::endl;
+        return false;
+    }
+    if (first->tlink->utype != SUBLISTNODE)
+    {
+        std::cout << "The GenList' head is not a subList, x shoule be char type" << std::endl;
+        return false;
+    }
+    else
+    {
+        Remove(x.first);
+        x.first = new (std::nothrow) GenListNode;
+        if (x.first == nullptr)
+        {
+            std::cerr << "malloc memory failed for GenList.x.first" << std::endl;
+            exit(1);
+        }
+        x.first->utype = HEADNODE;
+        x.first->info.ref = 1;
+        x.first->tlink = Copy(first->tlink->info.hlink->tlink);
+        return true;
+    }
+}
+bool GenList::Tail(GenList &x) const
+{
+    if (first->tlink == nullptr)
+    {
+        std::cout << "GenList is empty, get head failed" << std::endl;
+        return false;
+    }
+    Remove(x.first);
+    x.first = new (std::nothrow) GenListNode;
+    if (x.first == nullptr)
+    {
+        std::cerr << "malloc memory failed for GenList.x.first" << std::endl;
+        exit(1);
+    }
+    x.first->utype = HEADNODE;
+    x.first->info.ref = 1;
+    x.first->tlink = Copy(first->tlink->tlink);
+    return true;
+}
+int GenList::Length() const
+{
+    return Length(first);
+}
+int GenList::Depth() const
+{
+    return Depth(first);
+}
+bool GenList::Equal(const GenList &L) const
+{
+    return Equal(first, L.first);
+}
+GenList &GenList::operator=(const GenList &L)
+{
+    if (this == &L)
+    {
+        return *this;
+    }
+    Remove(first);
+    first = Copy(L.first);
+    return *this;
 }
 #endif
 #endif // DATASTRUCTURE

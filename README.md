@@ -27,4 +27,5 @@ If you wany to use one datastructure, following is an example:
 14. SparseMatrix
 15. OrthogonalList
 16. String
+17. GenList
  
