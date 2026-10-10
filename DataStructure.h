@@ -612,6 +612,90 @@ public:
         return os;
     }
 };
+template <typename T>
+class BinaryTree
+{
+private:
+    typedef struct BinTreeNode
+    {
+        T data;
+        BinTreeNode *leftChild, *rightChild;
+    } BinTreeNode;
+
+    BinTreeNode *root;
+    T RefValue;
+
+    void createBinTree(std::istream &in, BinTreeNode *&subTree);
+    void destroy(BinTreeNode *&subTree);
+    BinTreeNode *Find(BinTreeNode *subTree, T &x) const;
+    BinTreeNode *Copy(BinTreeNode *r);
+    int Height(BinTreeNode *subTree);
+    int Size(BinTreeNode *subTree);
+    BinTreeNode *Parent(BinTreeNode *subTree, BinTreeNode *t);
+    void preOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t));
+    void inOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t));
+    void postOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t));
+    void printBTree(std::ostream &os, BinTreeNode *BT);
+
+public:
+    BinaryTree();
+    BinaryTree(T value);
+    BinaryTree(const BinaryTree<T> &s);
+    ~BinaryTree();
+
+    bool IsEmpty();
+    int Height();
+    int Size();
+
+    BinTreeNode *Parent(BinTreeNode *t);
+    BinTreeNode *LeftChild(BinTreeNode *t);
+    BinTreeNode *RightChild(BinTreeNode *t);
+    BinTreeNode *getRoot() const;
+
+    void preOrder(void (*visit)(BinTreeNode *t));
+    void inOrder(void (*visit)(BinTreeNode *t));
+    void postOrder(void (*visit)(BinTreeNode *t));
+    void levelOrder(void (*visit)(BinTreeNode *t));
+
+    BinTreeNode *Find(T item) const;
+
+    friend std::istream &operator>>(std::istream &in, BinaryTree<T> &Tree)
+    {
+        Tree.createBinTree(in, Tree.root);
+        return in;
+    }
+    friend std::ostream &operator<<(std::ostream &out, BinaryTree<T> &Tree)
+    {
+        Tree.printBTree(out, Tree.root);
+        return out;
+    }
+};
+
+#ifdef DS_IMPLEMENTATION
+#define DS_SEQLIST_IMPLEMENTATION
+#define DS_SINGLYLINKEDLIST_IMPLEMENTATION
+#define DS_CIRCULARLINKEDLIST_IMPLEMENTATION
+#define DS_DOUBLYLINKEDLIST_IMPLEMENTATION
+#define DS_SEQSTACK_IMPLEMENTATION
+#define DS_LINKEDSTACK_IMPLEMENTATION
+#define DS_SEQQUEUE_IMPLEMENTATION
+#define DS_LINKEDQUEUE_IMPLEMENTATION
+#define DS_PQUEUE_IMPLEMENTATION
+#define DS_SEQDEQUE_IMPLEMENTATION
+#define DS_SYMMETRICMATRIX_IMPLEMENTATION
+#define DS_TRIDIAGONALMATRIX_IMPLEMENTATION
+#define DS_BANDMATRIX_IMPLEMENTATION
+#define DS_SPARSEMATRIX_IMPLEMENTATION
+#define DS_ORTHOGONALLIST_IMPLEMENTATION
+#define DS_STRING_IMPLEMENTATION
+#define DS_GENLIST_IMPLEMENTATION
+#define DS_BINARYTREE_IMPLEMENTATION
+#endif
+#ifdef DS_BINARYTREE_IMPLEMENTATION
+#define DS_LINKEDSTACK_IMPLEMENTATION
+#define DS_LINKEDQUEUE_IMPLEMENTATION
+#endif
+
 #ifdef DS_SEQLIST_IMPLEMENTATION
 template <typename T>
 SeqList<T>::SeqList(int size)
@@ -2541,19 +2625,19 @@ SeqDeque<T> &SeqDeque<T>::operator=(const SeqDeque<T> &Q)
     {
         return *this;
     }
-    delete[] elements;
-    front = Q.front;
-    rear = Q.rear;
-    maxSize = Q.maxSize;
-    elements = new (std::nothrow) T[maxSize];
-    if (elements == nullptr)
+    delete[] this->elements;
+    this->front = Q.front;
+    this->rear = Q.rear;
+    this->maxSize = Q.maxSize;
+    this->elements = new (std::nothrow) T[this->maxSize];
+    if (this->elements == nullptr)
     {
         std::cerr << "malloc memory failed for SeqDeQue.elements" << std::endl;
         exit(1);
     }
-    for (int i = 0; i < maxSize; ++i)
+    for (int i = 0; i < this->maxSize; ++i)
     {
-        elements[i] = Q.elements[i];
+        this->elements[i] = Q.elements[i];
     }
     return *this;
 }
@@ -2841,7 +2925,7 @@ template <typename T>
 SparseMatrix<T>::SparseMatrix(int maxSize)
 {
     maxTerms = maxSize;
-    elem = new (std::nothrow) Triple<T>[maxTerms];
+    elem = new (std::nothrow) Triple[maxTerms];
     if (elem == nullptr)
     {
         std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
@@ -2853,7 +2937,7 @@ template <typename T>
 SparseMatrix<T>::SparseMatrix(int rows, int cols, int maxSize)
 {
     maxTerms = maxSize;
-    elem = new (std::nothrow) Triple<T>[maxTerms];
+    elem = new (std::nothrow) Triple[maxTerms];
     if (elem == nullptr)
     {
         std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
@@ -2867,7 +2951,7 @@ template <typename T>
 SparseMatrix<T>::SparseMatrix(const SparseMatrix<T> &M)
 {
     maxTerms = M.maxTerms;
-    elem = new (std::nothrow) Triple<T>[maxTerms];
+    elem = new (std::nothrow) Triple[maxTerms];
     if (elem == nullptr)
     {
         std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
@@ -3064,7 +3148,7 @@ SparseMatrix<T> &SparseMatrix<T>::operator=(const SparseMatrix<T> &M)
     cols = M.cols;
     terms = M.terms;
     maxTerms = M.maxTerms;
-    elem = new (std::nothrow) Triple<T>[maxTerms];
+    elem = new (std::nothrow) Triple[maxTerms];
     if (elem == nullptr)
     {
         std::cerr << "malloc memory faied for SparseMatrix.elem" << std::endl;
@@ -3123,7 +3207,7 @@ OrthogonalList<T>::OrthogonalList(int rows, int cols)
     head = new (std::nothrow) OLNode;
     if (head == nullptr)
     {
-        cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
+        std::cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
         exit(1);
     }
     OLNode *p = head;
@@ -3132,7 +3216,7 @@ OrthogonalList<T>::OrthogonalList(int rows, int cols)
         OLNode *rhead = new (std::nothrow) OLNode;
         if (rhead == nullptr)
         {
-            cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
+            std::cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
             exit(1);
         }
         rhead->row = i;
@@ -3149,7 +3233,7 @@ OrthogonalList<T>::OrthogonalList(int rows, int cols)
         OLNode *chead = new (std::nothrow) OLNode;
         if (chead == nullptr)
         {
-            cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
+            std::cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
             exit(1);
         }
         chead->row = -1;
@@ -3168,7 +3252,7 @@ OrthogonalList<T>::OrthogonalList(const OrthogonalList<T> &M)
     head = new (std::nothrow) OLNode;
     if (head == nullptr)
     {
-        cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
+        std::cerr << "malloc memory failed for OrthogonalList.head" << std::endl;
         exit(1);
     }
     OLNode *p = head;
@@ -3177,7 +3261,7 @@ OrthogonalList<T>::OrthogonalList(const OrthogonalList<T> &M)
         OLNode *chead = new (std::nothrow) OLNode;
         if (chead == nullptr)
         {
-            cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
+            std::cerr << "malloc memory failed for OrthogonalList.chead" << std::endl;
             exit(1);
         }
         chead->row = -1;
@@ -3195,7 +3279,7 @@ OrthogonalList<T>::OrthogonalList(const OrthogonalList<T> &M)
         OLNode *rhead = new (std::nothrow) OLNode;
         if (rhead == nullptr)
         {
-            cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
+            std::cerr << "malloc memory failed for OrthogonalList.rhead" << std::endl;
             exit(1);
         }
         OLNode *cur = q->right, *node = rhead;
@@ -3204,7 +3288,7 @@ OrthogonalList<T>::OrthogonalList(const OrthogonalList<T> &M)
             node->right = new (std::nothrow) OLNode;
             if (node->right == nullptr)
             {
-                cerr << "malloc memory failed for OrthogonalList.node->right" << std::endl;
+                std::cerr << "malloc memory failed for OrthogonalList.node->right" << std::endl;
                 exit(1);
             }
             node = node->right;
@@ -3625,7 +3709,7 @@ bool String::IsEmpty() const
 {
     return curLength == 0;
 }
-int String::Find_BF(const String &pat, int k = 0) const
+int String::Find_BF(const String &pat, int k) const
 {
     if (k < 0 || k > curLength - 1)
     {
@@ -3639,7 +3723,7 @@ int String::Find_BF(const String &pat, int k = 0) const
     int pos = BF(ch + k, pat.ch);
     return pos == -1 ? -1 : k + pos;
 }
-int String::Find_KMP(const String &pat, int k = 0) const
+int String::Find_KMP(const String &pat, int k) const
 {
     if (k < 0 || k > curLength - 1)
     {
@@ -4064,6 +4148,312 @@ GenList &GenList::operator=(const GenList &L)
     Remove(first);
     first = Copy(L.first);
     return *this;
+}
+#endif
+#ifdef DS_BINARYTREE_IMPLEMENTATION
+template <typename T>
+void BinaryTree<T>::createBinTree(std::istream &in, BinTreeNode *&subTree)
+{
+    // An Example, enhanced later.
+    LinkedStack<BinTreeNode *> S;
+
+    BinTreeNode *p, *t;
+    int flag;
+    char ch;
+
+    subTree = nullptr;
+    in >> ch;
+    while (ch != RefValue.toChar())
+    {
+        switch (ch)
+        {
+        case '(':
+            S.Push(p);
+            flag = 1;
+            break;
+        case ')':
+            S.Pop(t);
+            break;
+        case ',':
+            flag = 2;
+            break;
+        default:
+            p = new (std::nothrow) BinTreeNode;
+            if (p == nullptr)
+            {
+                std::cerr << "malloc memory failed for BinaryTree.p" << std::endl;
+                exit(1);
+            }
+            p->data = T(ch);
+            p->leftChild = nullptr;
+            p->rightChild = nullptr;
+            if (subTree == nullptr)
+            {
+                subTree = p;
+            }
+            else
+            {
+                S.getTop(t);
+                if (flag == 1)
+                {
+                    t->leftChild = p;
+                }
+                else
+                {
+                    t->rightChild = p;
+                }
+            }
+        }
+        in >> ch;
+    }
+}
+template <typename T>
+void BinaryTree<T>::destroy(BinTreeNode *&subTree)
+{
+    if (subTree != nullptr)
+    {
+        destroy(subTree->leftChild);
+        destroy(subTree->rightChild);
+        delete subTree;
+        subTree == nullptr;
+    }
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Find(BinTreeNode *subTree, T &x) const
+{
+    if (subTree == nullptr)
+    {
+        return nullptr;
+    }
+    if (subTree->data == x)
+    {
+        return subTree;
+    }
+    else
+    {
+        BinTreeNode *p = Find(subTree->leftChild, x);
+        if (p != nullptr)
+        {
+            return p;
+        }
+        return Find(subTree->rightChild, x);
+    }
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Copy(BinTreeNode *r)
+{
+    if (r == nullptr)
+    {
+        return nullptr;
+    }
+    BinTreeNode *temp = new (std::nothrow) BinTreeNode;
+    if (temp == nullptr)
+    {
+        std::cerr << "malloc memory failed for BinaryTree.temp" << std::endl;
+        exit(1);
+    }
+    temp->data = r->data;
+    temp->leftChild = Copy(r->leftChild);
+    temp->rightChild = Copy(r->rightChild);
+
+    return temp;
+}
+template <typename T>
+int BinaryTree<T>::Height(BinTreeNode *subTree)
+{
+    if (subTree == nullptr)
+    {
+        return 0;
+    }
+    else
+    {
+        int i = Height(subTree->leftChild);
+        int j = Height(subTree->rightChild);
+        return (i < j) ? (j + 1) : (i + 1);
+    }
+}
+template <typename T>
+int BinaryTree<T>::Size(BinTreeNode *subTree)
+{
+    if (subTree == nullptr)
+    {
+        return 0;
+    }
+    else
+    {
+        return Size(subTree->leftChild) + Size(subTree->rightChild) + 1;
+    }
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Parent(BinTreeNode *subTree, BinTreeNode *t)
+{
+    if (subTree == nullptr)
+    {
+        return nullptr;
+    }
+    if (subTree->leftChild == t || subTree->rightChild == t)
+    {
+        return subTree;
+    }
+    BinTreeNode *p;
+    if ((p = Parent(subTree->leftChild, t)) != nullptr)
+    {
+        return p;
+    }
+    else
+    {
+        return Parent(subTree->rightChild, t);
+    }
+}
+template <typename T>
+void BinaryTree<T>::preOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t))
+{
+    if (subTree != nullptr)
+    {
+        visit(subTree);
+        preOrder(subTree->leftChild, visit);
+        preOrder(subTree->rightChild, visit);
+    }
+}
+template <typename T>
+void BinaryTree<T>::inOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t))
+{
+    if (subTree != nullptr)
+    {
+        inOrder(subTree->leftChild, visit);
+        visit(subTree);
+        inOrder(subTree->rightChild, visit);
+    }
+}
+template <typename T>
+void BinaryTree<T>::postOrder(BinTreeNode *subTree, void (*visit)(BinTreeNode *t))
+{
+    if (subTree != nullptr)
+    {
+        postOrder(subTree->leftChild, visit);
+        postOrder(subTree->rightChild, visit);
+        visit(subTree);
+    }
+}
+template <typename T>
+void BinaryTree<T>::printBTree(std::ostream &os, BinTreeNode *BT)
+{
+    if (BT == nullptr)
+    {
+        return;
+    }
+    os << BT->data.toChar();
+    if (BT->leftChild != nullptr || BT->rightChild != nullptr)
+    {
+        os << "(";
+        printBTree(os, BT->leftChild);
+        os << ",";
+        printBTree(os, BT->rightChild);
+        os << ")";
+    }
+}
+template <typename T>
+BinaryTree<T>::BinaryTree()
+{
+    root = nullptr;
+    RefValue = T();
+}
+template <typename T>
+BinaryTree<T>::BinaryTree(T value)
+{
+    root = nullptr;
+    RefValue = value;
+}
+template <typename T>
+BinaryTree<T>::BinaryTree(const BinaryTree<T> &s)
+{
+    root = Copy(s.root);
+    RefValue = s.RefValue;
+}
+template <typename T>
+BinaryTree<T>::~BinaryTree()
+{
+    destroy(root);
+}
+template <typename T>
+bool BinaryTree<T>::IsEmpty()
+{
+    return root == nullptr;
+}
+template <typename T>
+int BinaryTree<T>::Height()
+{
+    return Height(root);
+}
+template <typename T>
+int BinaryTree<T>::Size()
+{
+    return Size(root);
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Parent(BinTreeNode *t)
+{
+    return Parent(root, t);
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::LeftChild(BinTreeNode *t)
+{
+    return t == nullptr ? nullptr : t->leftChild;
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::RightChild(BinTreeNode *t)
+{
+    return t == nullptr ? nullptr : t->rightChild;
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::getRoot() const
+{
+    return root;
+}
+template <typename T>
+void BinaryTree<T>::preOrder(void (*visit)(BinTreeNode *t))
+{
+    preOrder(root, visit);
+}
+template <typename T>
+void BinaryTree<T>::inOrder(void (*visit)(BinTreeNode *t))
+{
+    inOrder(root, visit);
+}
+template <typename T>
+void BinaryTree<T>::postOrder(void (*visit)(BinTreeNode *t))
+{
+    postOrder(root, visit);
+}
+template <typename T>
+void BinaryTree<T>::levelOrder(void (*visit)(BinTreeNode *t))
+{
+    if (root != nullptr)
+    {
+        LinkedQueue<BinTreeNode *> q;
+        BinTreeNode *p = root;
+        visit(p);
+        q.EnQueue(root);
+        while (!q.IsEmpty())
+        {
+            q.DeQueue(p);
+            if (p->leftChild != nullptr)
+            {
+                visit(p->leftChild);
+                q.EnQueue(p->leftChild);
+            }
+            if (p->rightChild != nullptr)
+            {
+                visit(p->rightChild);
+                q.EnQueue(p->rightChild);
+            }
+        }
+    }
+}
+template <typename T>
+typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Find(T item) const
+{
+    return Find(root, item);
 }
 #endif
 #endif // DATASTRUCTURE
