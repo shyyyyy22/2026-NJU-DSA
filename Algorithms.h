@@ -2,9 +2,14 @@
 #define ALGORITHMS
 #include <iostream>
 #include <string.h>
+// String
 int BF(const char *T, const char *P);
 void GetNext(const char *P, int next[]);
 int KMP(const char *T, const char *P, int next[]);
+#ifdef ALGO_IMPLEMENTATION
+#define ALGO_STRING_IMPLEMENTATION
+#endif
+
 #ifdef ALGO_STRING_IMPLEMENTATION
 int BF(const char *T, const char *P)
 {
