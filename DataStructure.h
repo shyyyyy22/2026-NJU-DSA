@@ -670,7 +670,38 @@ public:
         return out;
     }
 };
+template <typename T>
+class ThreadTree
+{
+private:
+    typedef struct ThreadNode
+    {
+        int ltag, rtag;
+        T data;
+        ThreadNode *leftChild, *rightChild;
+    } ThreadNode;
 
+    ThreadNode *root;
+
+    void createInThread(ThreadNode *current, ThreadNode *&pre);
+    ThreadNode *parent(ThreadNode *t);
+    ThreadNode *Copy(ThreadNode *subTree);
+    void destroy(ThreadNode *subTree);
+
+public:
+    ThreadTree();
+    ThreadTree(const ThreadTree<T> &t);
+    ~ThreadTree();
+
+    void createInThread();
+
+    ThreadNode *First(ThreadNode *t);
+    ThreadNode *Last(ThreadNode *t);
+    ThreadNode *Next(ThreadNode *p);
+    ThreadNode *Prior(ThreadNode *p);
+    ThreadNode *Parent(ThreadNode *t);
+    ThreadNode *getRoot() const;
+};
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
 #define DS_SINGLYLINKEDLIST_IMPLEMENTATION
@@ -690,6 +721,7 @@ public:
 #define DS_STRING_IMPLEMENTATION
 #define DS_GENLIST_IMPLEMENTATION
 #define DS_BINARYTREE_IMPLEMENTATION
+#define DS_THREADTREE_IMPLEMENTATION
 #endif
 #ifdef DS_BINARYTREE_IMPLEMENTATION
 #define DS_LINKEDSTACK_IMPLEMENTATION
@@ -4215,7 +4247,7 @@ void BinaryTree<T>::destroy(BinTreeNode *&subTree)
         destroy(subTree->leftChild);
         destroy(subTree->rightChild);
         delete subTree;
-        subTree == nullptr;
+        subTree = nullptr;
     }
 }
 template <typename T>
@@ -4454,6 +4486,191 @@ template <typename T>
 typename BinaryTree<T>::BinTreeNode *BinaryTree<T>::Find(T item) const
 {
     return Find(root, item);
+}
+#endif
+#ifdef DS_THREADTREE_IMPLEMENTATION
+template <typename T>
+void ThreadTree<T>::createInThread(ThreadNode *current, ThreadNode *&pre)
+{
+    if (current == nullptr)
+    {
+        return;
+    }
+    createInThread(current->leftChild, pre);
+    if (current->leftChild == nullptr)
+    {
+        current->leftChild = pre;
+        current->ltag = 1;
+    }
+    if (pre != nullptr && pre->rightChild == nullptr)
+    {
+        pre->rightChild = current;
+        pre->rtag = 1;
+    }
+    pre = current;
+    createInThread(current->rightChild, pre);
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::parent(ThreadNode *t)
+{
+    if (t == nullptr || root == nullptr || t == root)
+    {
+        return nullptr;
+    }
+    ThreadNode *p;
+    p = First(t);
+    if (p->ltag == 1 && p->leftChild != nullptr)
+    {
+        p = p->leftChild;
+        if (p->rightChild == t)
+        {
+            return p;
+        }
+    }
+    p = Last(t);
+    if (p->rtag == 1 && p->rightChild != nullptr)
+    {
+        p = p->rightChild;
+        if (p->leftChild == t)
+        {
+            return p;
+        }
+    }
+    return nullptr;
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::Copy(ThreadNode *subTree)
+{
+    if (subTree == nullptr)
+    {
+        return nullptr;
+    }
+    ThreadNode *p = new (std::nothrow) ThreadNode;
+    if (p == nullptr)
+    {
+        std::cerr << "malloc memory failed for ThreadTree.p" << std::endl;
+        exit(1);
+    }
+    p->data = subTree->data;
+    p->ltag = 0;
+    p->rtag = 0;
+    p->leftChild = subTree->ltag == 0 ? Copy(subTree->leftChild) : nullptr;
+    p->rightChild = subTree->rtag == 0 ? Copy(subTree->rightChild) : nullptr;
+    return p;
+}
+template <typename T>
+void ThreadTree<T>::destroy(ThreadNode *subTree)
+{
+    if (subTree != nullptr)
+    {
+        if (subTree->ltag == 0)
+        {
+            destroy(subTree->leftChild);
+        }
+        if (subTree->rtag == 0)
+        {
+            destroy(subTree->rightChild);
+        }
+        delete subTree;
+    }
+}
+template <typename T>
+ThreadTree<T>::ThreadTree()
+{
+    root = nullptr;
+}
+template <typename T>
+ThreadTree<T>::ThreadTree(const ThreadTree<T> &t)
+{
+    root = Copy(t.root);
+    createInThread();
+}
+template <typename T>
+ThreadTree<T>::~ThreadTree()
+{
+    destroy(root);
+    root = nullptr;
+}
+template <typename T>
+void ThreadTree<T>::createInThread()
+{
+    ThreadNode *pre = nullptr;
+    if (root != nullptr)
+    {
+        createInThread(root, pre);
+        pre->rightChild = nullptr;
+        pre->rtag = 1;
+    }
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::First(ThreadNode *t)
+{
+    if (t == nullptr)
+    {
+        return nullptr;
+    }
+    ThreadNode *p = t;
+    while (p->ltag == 0)
+    {
+        p = p->leftChild;
+    }
+    return p;
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::Last(ThreadNode *t)
+{
+    if (t == nullptr)
+    {
+        return nullptr;
+    }
+    ThreadNode *p = t;
+    while (p->rtag == 0)
+    {
+        p = p->rightChild;
+    }
+    return p;
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::Next(ThreadNode *p)
+{
+    if (p == nullptr)
+    {
+        return nullptr;
+    }
+    if (p->rtag == 0)
+    {
+        return First(p->rightChild);
+    }
+    else
+    {
+        return p->rightChild;
+    }
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::Prior(ThreadNode *p)
+{
+    if (p == nullptr)
+    {
+        return nullptr;
+    }
+    if (p->ltag == 0)
+    {
+        return Last(p->leftChild);
+    }
+    else
+    {
+        return p->leftChild;
+    }
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::Parent(ThreadNode *t)
+{
+    return parent(t);
+}
+template <typename T>
+typename ThreadTree<T>::ThreadNode *ThreadTree<T>::getRoot() const
+{
+    return root;
 }
 #endif
 #endif // DATASTRUCTURE

@@ -19,7 +19,7 @@ If you want to use all ds and algo:
 #include "DataStructure.h"
 ```
 
-## The DataStuuctures supported now (2026-10-10):
+## The DataStuuctures supported now (2026-10-11):
 
 1. SeqList
 2. SinglyLinkedList
@@ -39,6 +39,7 @@ If you want to use all ds and algo:
 16. String
 17. GenList
 18. BinaryTree
+19. ThreadTree
  
 ## The Algorithms supported now (2026-10-10):
 - String
