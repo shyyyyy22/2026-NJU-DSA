@@ -702,6 +702,41 @@ public:
     ThreadNode *Parent(ThreadNode *t);
     ThreadNode *getRoot() const;
 };
+template <typename T>
+class Tree
+{
+private:
+    typedef struct TreeNode
+    {
+        T data;
+        TreeNode *firstChild, *nextSibling;
+    } TreeNode;
+
+    TreeNode *root;
+
+    TreeNode *Find(TreeNode *p, T value);
+    void RemovesubTree(TreeNode *p);
+    TreeNode *FindParent(TreeNode *t, TreeNode *p);
+    TreeNode *Copy(TreeNode *t);
+
+public:
+    Tree();
+    Tree(const Tree<T> &t);
+    ~Tree();
+
+    TreeNode *getRoot() const;
+    bool IsEmpty() const;
+
+    TreeNode *FirstChild(TreeNode *p);
+    TreeNode *NextSibling(TreeNode *p);
+    TreeNode *Parent(TreeNode *p);
+    TreeNode *Find(T value);
+
+    void PreOrder(TreeNode *t, void (*visit)(TreeNode *));
+    void PostOrder(TreeNode *t, void (*visit)(TreeNode *));
+    void LevelOrder(TreeNode *t, void (*visit)(TreeNode *));
+};
+
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
 #define DS_SINGLYLINKEDLIST_IMPLEMENTATION
@@ -722,9 +757,14 @@ public:
 #define DS_GENLIST_IMPLEMENTATION
 #define DS_BINARYTREE_IMPLEMENTATION
 #define DS_THREADTREE_IMPLEMENTATION
+#define DS_TREE_IMPLEMENTATION
 #endif
+
 #ifdef DS_BINARYTREE_IMPLEMENTATION
 #define DS_LINKEDSTACK_IMPLEMENTATION
+#define DS_LINKEDQUEUE_IMPLEMENTATION
+#endif
+#ifdef DS_TREE_IMPLEMENTATION
 #define DS_LINKEDQUEUE_IMPLEMENTATION
 #endif
 
@@ -4671,6 +4711,181 @@ template <typename T>
 typename ThreadTree<T>::ThreadNode *ThreadTree<T>::getRoot() const
 {
     return root;
+}
+#endif
+#ifdef DS_TREE_IMPLEMENTATION
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::Find(TreeNode *p, T value)
+{
+    if (p == nullptr)
+    {
+        return nullptr;
+    }
+    if (p->data == value)
+    {
+        return p;
+    }
+    TreeNode *q = Find(p->firstChild, value);
+    return q == nullptr ? Find(p->nextSibling, value) : q;
+}
+template <typename T>
+void Tree<T>::RemovesubTree(TreeNode *p)
+{
+    if (p != nullptr)
+    {
+        TreeNode *q = p->firstChild;
+        while (q != nullptr)
+        {
+            TreeNode *next = q->nextSibling;
+            RemovesubTree(q);
+            q = next;
+        }
+        delete p;
+    }
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::FindParent(TreeNode *t, TreeNode *p)
+{
+    if (t == nullptr || p == nullptr)
+    {
+        return nullptr;
+    }
+    TreeNode *q = t->firstChild;
+    while (q != nullptr)
+    {
+        if (q == p)
+        {
+            return t;
+        }
+        TreeNode *s = FindParent(q, p);
+        if (s != nullptr)
+        {
+            return s;
+        }
+        q = q->nextSibling;
+    }
+    return nullptr;
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::Copy(TreeNode *t)
+{
+    if (t == nullptr)
+    {
+        return nullptr;
+    }
+    TreeNode *p = new (std::nothrow) TreeNode;
+    if (p == nullptr)
+    {
+        std::cerr << "malloc memory failed for Tree.t" << std::endl;
+        exit(1);
+    }
+    p->data = t->data;
+    p->firstChild = Copy(t->firstChild);
+    p->nextSibling = Copy(t->nextSibling);
+    return p;
+}
+template <typename T>
+Tree<T>::Tree()
+{
+    root = nullptr;
+}
+template <typename T>
+Tree<T>::Tree(const Tree<T> &t)
+{
+    root = Copy(t.root);
+}
+template <typename T>
+Tree<T>::~Tree()
+{
+    RemovesubTree(root);
+    root = nullptr;
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::getRoot() const
+{
+    return root;
+}
+template <typename T>
+bool Tree<T>::IsEmpty() const
+{
+    return root == nullptr;
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::FirstChild(TreeNode *p)
+{
+    return p == nullptr ? nullptr : p->firstChild;
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::NextSibling(TreeNode *p)
+{
+    return p == nullptr ? nullptr : p->nextSibling;
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::Parent(TreeNode *p)
+{
+    if (p == root)
+    {
+        return nullptr;
+    }
+    return FindParent(root, p);
+}
+template <typename T>
+typename Tree<T>::TreeNode *Tree<T>::Find(T value)
+{
+    return Find(root, value);
+}
+template <typename T>
+void Tree<T>::PreOrder(TreeNode *t, void (*visit)(TreeNode *))
+{
+    if (t == nullptr)
+    {
+        return;
+    }
+    visit(t);
+    TreeNode *q = t->firstChild;
+    while (q != nullptr)
+    {
+        PreOrder(q, visit);
+        q = q->nextSibling;
+    }
+}
+template <typename T>
+void Tree<T>::PostOrder(TreeNode *t, void (*visit)(TreeNode *))
+{
+    if (t == nullptr)
+    {
+        return;
+    }
+    TreeNode *q = t->firstChild;
+    while (q != nullptr)
+    {
+        PostOrder(q, visit);
+        q = q->nextSibling;
+    }
+    visit(t);
+}
+template <typename T>
+void Tree<T>::LevelOrder(TreeNode *t, void (*visit)(TreeNode *))
+{
+    if (t == nullptr)
+    {
+        return;
+    }
+    LinkedQueue<TreeNode *> Q;
+    Q.EnQueue(t);
+    while (!Q.IsEmpty())
+    {
+        TreeNode *p;
+        Q.DeQueue(p);
+        visit(p);
+
+        TreeNode *q = p->firstChild;
+        while (q != nullptr)
+        {
+            Q.EnQueue(q);
+            q = q->nextSibling;
+        }
+    }
 }
 #endif
 #endif // DATASTRUCTURE
