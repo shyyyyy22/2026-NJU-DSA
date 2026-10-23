@@ -43,6 +43,7 @@ If you want to use all ds and algo:
 20. Tree
 21. MinHeap
 22. HuffmanTree
+23. bitSet
  
 ## The Algorithms supported now (2026-10-10):
 - String

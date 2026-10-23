@@ -795,6 +795,34 @@ public:
     HuffmanNode *getRoot() const;
     void printTree(std::ostream &os, HuffmanNode *t) const;
 };
+template <typename T>
+class bitSet
+{
+private:
+    int setSize;
+    int vectorSize;
+    unsigned short *bitVector;
+
+public:
+    bitSet(int sz = 64);
+    bitSet(const bitSet<T> &R);
+    ~bitSet();
+
+    int getMember(const T x) const;
+    void putMember(const T x, int v);
+    void makeEmpty();
+
+    bool addMember(const T x);
+    bool delMember(const T x);
+    bool Contains(const T x) const;
+    bool subSet(const bitSet<T> &R) const;
+
+    bool operator==(const bitSet<T> &R) const;
+    bitSet<T> &operator=(const bitSet<T> &R);
+    bitSet<T> operator+(const bitSet<T> &R) const;
+    bitSet<T> operator*(const bitSet<T> &R) const;
+    bitSet<T> operator-(const bitSet<T> &R) const;
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -819,6 +847,7 @@ public:
 #define DS_TREE_IMPLEMENTATION
 #define DS_MINHEAP_IMPLEMENTATION
 #define DS_HUFFMANTREE_IMPLEMENTATION
+#define DS_BITSET_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -5213,6 +5242,232 @@ void HuffmanTree<T, E>::printTree(std::ostream &os, HuffmanNode *t) const
             os << ")";
         }
     }
+}
+#endif
+#ifdef DS_BITSET_IMPLEMENTATION
+template <typename T>
+bitSet<T>::bitSet(int sz)
+{
+    setSize = sz;
+    vectorSize = (sz + 15) / 16;
+    bitVector = new (std::nothrow) unsigned short[vectorSize];
+    if (bitVector == nullptr)
+    {
+        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        bitVector[i] = 0;
+    }
+}
+template <typename T>
+bitSet<T>::bitSet(const bitSet<T> &R)
+{
+    setSize = R.setSize;
+    vectorSize = R.vectorSize;
+    bitVector = new (std::nothrow) unsigned short[vectorSize];
+    if (bitVector == nullptr)
+    {
+        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        bitVector[i] = R.bitVector[i];
+    }
+}
+template <typename T>
+bitSet<T>::~bitSet()
+{
+    delete[] bitVector;
+}
+template <typename T>
+int bitSet<T>::getMember(const T x) const
+{
+    if (x > setSize - 1 || x < 0)
+    {
+        std::cout << "x is out of range of Set, getMember() failed" << std::endl;
+        return -1;
+    }
+    return (bitVector[x >> 4] >> ((-x) & 15)) & 1;
+}
+template <typename T>
+void bitSet<T>::putMember(const T x, int v)
+{
+    if (x > setSize - 1 || x < 0)
+    {
+        std::cout << "x is out of range of Set, putMember() failed" << std::endl;
+        return;
+    }
+    if (v != 1 && v != 0)
+    {
+        std::cout << "v must be 0 or 1, putMember() failed" << std::endl;
+        return;
+    }
+    unsigned short mask = 1 << ((-x) & 15);
+    if (v == 1)
+    {
+        bitVector[x >> 4] |= mask;
+    }
+    if (v == 0)
+    {
+        bitVector[x >> 4] &= ~mask;
+    }
+}
+template <typename T>
+void bitSet<T>::makeEmpty()
+{
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        bitVector[i] = 0;
+    }
+}
+template <typename T>
+bool bitSet<T>::addMember(const T x)
+{
+    if (x > setSize - 1 || x < 0)
+    {
+        std::cout << "x is out of range of Set, addMember() failed" << std::endl;
+        return false;
+    }
+    if (getMember(x) == 1)
+    {
+        return false;
+    }
+    putMember(x, 1);
+    return true;
+}
+template <typename T>
+bool bitSet<T>::delMember(const T x)
+{
+    if (x > setSize - 1 || x < 0)
+    {
+        std::cout << "x is out of range of Set, delMember() failed" << std::endl;
+        return false;
+    }
+    if (getMember(x) == 0)
+    {
+        return false;
+    }
+    putMember(x, 0);
+    return true;
+}
+template <typename T>
+bool bitSet<T>::Contains(const T x) const
+{
+    if (x > setSize - 1 || x < 0)
+    {
+        std::cout << "x is out of range of Set, Contains() failed" << std::endl;
+        return false;
+    }
+    if (getMember(x) == 1)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+template <typename T>
+bool bitSet<T>::subSet(const bitSet<T> &R) const
+{
+    if (setSize != R.setSize)
+    {
+        return false;
+    }
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        if (bitVector[i] & ~R.bitVector[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+template <typename T>
+bool bitSet<T>::operator==(const bitSet<T> &R) const
+{
+    if (setSize != R.setSize)
+    {
+        return false;
+    }
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        if (bitVector[i] != R.bitVector[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+template <typename T>
+bitSet<T> &bitSet<T>::operator=(const bitSet<T> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    delete[] bitVector;
+    setSize = R.setSize;
+    vectorSize = R.vectorSize;
+    bitVector = new (std::nothrow) unsigned short[vectorSize];
+    if (bitVector == nullptr)
+    {
+        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        bitVector[i] = R.bitVector[i];
+    }
+    return *this;
+}
+template <typename T>
+bitSet<T> bitSet<T>::operator+(const bitSet<T> &R) const
+{
+    if (setSize != R.setSize)
+    {
+        std::cerr << "The size of Sets must be the same, +() failed" << std::endl;
+        exit(1);
+    }
+    bitSet<T> result(setSize);
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        result.bitVector[i] = bitVector[i] | R.bitVector[i];
+    }
+    return result;
+}
+template <typename T>
+bitSet<T> bitSet<T>::operator*(const bitSet<T> &R) const
+{
+    if (setSize != R.setSize)
+    {
+        std::cerr << "The size of Sets must be the same, *() failed" << std::endl;
+        exit(1);
+    }
+    bitSet<T> result(setSize);
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        result.bitVector[i] = bitVector[i] & R.bitVector[i];
+    }
+    return result;
+}
+template <typename T>
+bitSet<T> bitSet<T>::operator-(const bitSet<T> &R) const
+{
+    if (setSize != R.setSize)
+    {
+        std::cerr << "The size of Sets must be the same, -() failed" << std::endl;
+        exit(1);
+    }
+    bitSet<T> result(setSize);
+    for (int i = 0; i < vectorSize; ++i)
+    {
+        result.bitVector[i] = bitVector[i] & ~(R.bitVector[i]);
+    }
+    return result;
 }
 #endif
 #endif // DATASTRUCTURE
