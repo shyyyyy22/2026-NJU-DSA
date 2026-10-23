@@ -41,6 +41,7 @@ If you want to use all ds and algo:
 18. BinaryTree
 19. ThreadTree
 20. Tree
+21. MinHeap
  
 ## The Algorithms supported now (2026-10-10):
 - String

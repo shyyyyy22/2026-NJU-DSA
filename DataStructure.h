@@ -736,6 +736,40 @@ public:
     void PostOrder(TreeNode *t, void (*visit)(TreeNode *));
     void LevelOrder(TreeNode *t, void (*visit)(TreeNode *));
 };
+template <typename T, typename E>
+class Element
+{
+public:
+    T key;
+    E other;
+
+    Element<T, E> &operator=(const Element<T, E> &x);
+    bool operator<=(const Element<T, E> &x) const;
+    bool operator>(const Element<T, E> &x) const;
+};
+template <typename T, typename E>
+class MinHeap
+{
+private:
+    Element<T, E> *heap;
+    int currentSize;
+    int maxHeapSize;
+
+    void siftDown(int start, int m);
+    void siftUp(int start);
+
+public:
+    MinHeap(int sz = 64);
+    MinHeap(Element<T, E> arr[], int n);
+    MinHeap(const MinHeap<T, E> &H);
+    ~MinHeap();
+
+    bool Insert(const Element<T, E> &x);
+    bool Remove(Element<T, E> &x);
+    bool IsEmpty() const;
+    bool IsFull() const;
+    void MakeEmpty();
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -758,6 +792,7 @@ public:
 #define DS_BINARYTREE_IMPLEMENTATION
 #define DS_THREADTREE_IMPLEMENTATION
 #define DS_TREE_IMPLEMENTATION
+#define DS_MINHEAP_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -4886,6 +4921,168 @@ void Tree<T>::LevelOrder(TreeNode *t, void (*visit)(TreeNode *))
             q = q->nextSibling;
         }
     }
+}
+#endif
+#ifdef DS_MINHEAP_IMPLEMENTATION
+template <typename T, typename E>
+Element<T, E> &Element<T, E>::operator=(const Element<T, E> &x)
+{
+    if (this == &x)
+    {
+        return *this;
+    }
+    key = x.key;
+    other = x.other;
+    return *this;
+}
+template <typename T, typename E>
+bool Element<T, E>::operator<=(const Element<T, E> &x) const
+{
+    return key <= x.key;
+}
+template <typename T, typename E>
+bool Element<T, E>::operator>(const Element<T, E> &x) const
+{
+    return key > x.key;
+}
+template <typename T, typename E>
+void MinHeap<T, E>::siftDown(int start, int m)
+{
+    int i = start, j = 2 * start + 1;
+    Element<T, E> temp = heap[i];
+    while (j <= m)
+    {
+        if (j < m && heap[j] > heap[j + 1])
+        {
+            j++;
+        }
+        if (temp > heap[j])
+        {
+            heap[i] = heap[j];
+            i = j;
+            j = 2 * i + 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+    heap[i] = temp;
+}
+template <typename T, typename E>
+void MinHeap<T, E>::siftUp(int start)
+{
+    int i = start, j = (start - 1) / 2;
+    Element<T, E> temp = heap[i];
+    while (i > 0)
+    {
+        if (heap[j] > temp)
+        {
+            heap[i] = heap[j];
+            i = j;
+            j = (i - 1) / 2;
+        }
+        else
+        {
+            break;
+        }
+    }
+    heap[i] = temp;
+}
+template <typename T, typename E>
+MinHeap<T, E>::MinHeap(int sz)
+{
+    maxHeapSize = sz;
+    currentSize = 0;
+    heap = new (std::nothrow) Element<T, E>[maxHeapSize];
+    if (heap == nullptr)
+    {
+        std::cerr << "malloc memory failed for MinHeap.heap" << std::endl;
+        exit(1);
+    }
+}
+template <typename T, typename E>
+MinHeap<T, E>::MinHeap(Element<T, E> arr[], int n)
+{
+    maxHeapSize = n;
+    currentSize = n;
+    heap = new (std::nothrow) Element<T, E>[maxHeapSize];
+    if (heap == nullptr)
+    {
+        std::cerr << "malloc memory failed for MinHeap.heap" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < n; ++i)
+    {
+        heap[i] = arr[i];
+    }
+    int currentPos = (n - 2) / 2;
+    while (currentPos >= 0)
+    {
+        siftDown(currentPos, currentSize - 1);
+        currentPos--;
+    }
+}
+template <typename T, typename E>
+MinHeap<T, E>::MinHeap(const MinHeap<T, E> &H)
+{
+    maxHeapSize = H.maxHeapSize;
+    currentSize = H.currentSize;
+    heap = new (std::nothrow) Element<T, E>[maxHeapSize];
+    if (heap == nullptr)
+    {
+        std::cerr << "malloc memory failed for MinHeap.heap" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < currentSize; ++i)
+    {
+        heap[i] = H.heap[i];
+    }
+}
+template <typename T, typename E>
+MinHeap<T, E>::~MinHeap()
+{
+    delete[] heap;
+}
+template <typename T, typename E>
+bool MinHeap<T, E>::Insert(const Element<T, E> &x)
+{
+    if (IsFull())
+    {
+        std::cout << "Heap is full, Insert() failed" << std::endl;
+        return false;
+    }
+    heap[currentSize++] = x;
+    siftUp(currentSize - 1);
+    return true;
+}
+template <typename T, typename E>
+bool MinHeap<T, E>::Remove(Element<T, E> &x)
+{
+    if (IsEmpty())
+    {
+        std::cout << "Heap is empty, Remove() failed" << std::endl;
+        return false;
+    }
+    x = heap[0];
+    heap[0] = heap[--currentSize];
+    siftDown(0, currentSize - 1);
+    return true;
+}
+template <typename T, typename E>
+bool MinHeap<T, E>::IsEmpty() const
+{
+    return currentSize == 0;
+}
+template <typename T, typename E>
+bool MinHeap<T, E>::IsFull() const
+{
+    return currentSize == maxHeapSize;
+}
+template <typename T, typename E>
+void MinHeap<T, E>::MakeEmpty()
+{
+    currentSize = 0;
 }
 #endif
 #endif // DATASTRUCTURE
