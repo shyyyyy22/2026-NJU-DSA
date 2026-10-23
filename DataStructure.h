@@ -869,6 +869,38 @@ public:
     void WeightedUnion(int Root1, int Root2);
     int CollapsingFind(int x);
 };
+template <typename K, typename E>
+class ListDict
+{
+private:
+    typedef struct Entry
+    {
+        K key;
+        E attr;
+
+    public:
+        Entry() : key(), attr() {};
+        Entry(const K &k, const E &e) : key(k), attr(e) {};
+    } Entry;
+    Entry *data;
+    int maxSize;
+    int n;
+
+public:
+    ListDict(int sz = 64);
+    ListDict(const ListDict<K, E> &R);
+    ~ListDict();
+
+    int Search(K k) const;
+    int BinarySearch(K k) const;
+    void Insert(const K &k, const E &e);
+    bool Remove(const K &k, E &e);
+    bool getAttr(K k, E &e) const;
+    int Length() const;
+    void print() const;
+
+    ListDict<K, E> &operator=(const ListDict<K, E> &R);
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -896,6 +928,7 @@ public:
 #define DS_BITSET_IMPLEMENTATION
 #define DS_LINKEDSET_IMPLEMENTATION
 #define DS_UFSETS_IMPLEMENTATION
+#define DS_LISTDICT_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -5944,6 +5977,209 @@ int UFSets::CollapsingFind(int x)
         x = temp;
     }
     return pr;
+}
+#endif
+#ifdef DS_LISTDICT_IMPLEMENTATION
+template <typename K, typename E>
+ListDict<K, E>::ListDict(int sz)
+{
+    maxSize = sz;
+    n = 0;
+    data = new (std::nothrow) Entry[sz];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for ListDict.data" << std::endl;
+        exit(1);
+    }
+}
+template <typename K, typename E>
+ListDict<K, E>::ListDict(const ListDict<K, E> &R)
+{
+    maxSize = R.maxSize;
+    n = R.n;
+    data = new (std::nothrow) Entry[maxSize];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for ListDict.data" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < n; ++i)
+    {
+        data[i] = R.data[i];
+    }
+}
+template <typename K, typename E>
+ListDict<K, E>::~ListDict()
+{
+    delete[] data;
+}
+template <typename K, typename E>
+int ListDict<K, E>::Search(K k) const
+{
+    for (int i = 0; i < n; ++i)
+    {
+        if (data[i].key == k)
+        {
+            return i;
+        }
+        if (data[i].key > k)
+        {
+            return -1;
+        }
+    }
+    return -1;
+}
+template <typename K, typename E>
+int ListDict<K, E>::BinarySearch(K k) const
+{
+    int low = 0, high = n - 1;
+    while (low <= high)
+    {
+        int mid = (low + high) / 2;
+        if (data[mid].key < k)
+        {
+            low = mid + 1;
+        }
+        else if (data[mid].key > k)
+        {
+            high = mid - 1;
+        }
+        else
+        {
+            return mid;
+        }
+    }
+    return -1;
+}
+template <typename K, typename E>
+void ListDict<K, E>::Insert(const K &k, const E &e)
+{
+
+    int i = 0;
+    for (i = 0; i < n; ++i)
+    {
+        if (data[i].key >= k)
+        {
+            break;
+        }
+    }
+    if (i < n && data[i].key == k)
+    {
+        data[i].attr = e;
+        return;
+    }
+    if (n == maxSize)
+    {
+        std::cout << "Dict is full, Insert() failed" << std::endl;
+        return;
+    }
+    for (int j = n; j > i; --j)
+    {
+        data[j] = data[j - 1];
+    }
+    data[i] = Entry(k, e);
+    n++;
+}
+template <typename K, typename E>
+bool ListDict<K, E>::Remove(const K &k, E &e)
+{
+    if (n == 0)
+    {
+        std::cout << "Dict is empty, Remove() failed" << std::endl;
+        return false;
+    }
+    int i = 0;
+    for (i = 0; i < n; ++i)
+    {
+        if (data[i].key >= k)
+        {
+            break;
+        }
+    }
+    if (i == n || data[i].key > k)
+    {
+        std::cout << "(k, e) is not in dict, Remove() failed" << std::endl;
+        return false;
+    }
+    else
+    {
+        e = data[i].attr;
+        for (int j = i; j < n - 1; ++j)
+        {
+            data[j] = data[j + 1];
+        }
+        n--;
+        return true;
+    }
+}
+template <typename K, typename E>
+bool ListDict<K, E>::getAttr(K k, E &e) const
+{
+    if (n == 0)
+    {
+        std::cout << "Dict is empty, getAttr() failed" << std::endl;
+        return false;
+    }
+    int i = 0;
+    for (i = 0; i < n; ++i)
+    {
+        if (data[i].key >= k)
+        {
+            break;
+        }
+    }
+    if (i == n || data[i].key > k)
+    {
+        std::cout << "(k, e) is not in dict, getAttr() failed" << std::endl;
+        return false;
+    }
+    else
+    {
+        e = data[i].attr;
+        return true;
+    }
+}
+template <typename K, typename E>
+int ListDict<K, E>::Length() const
+{
+    return n;
+}
+template <typename K, typename E>
+void ListDict<K, E>::print() const
+{
+    if (n == 0)
+    {
+        std::cout << "{ }";
+        return;
+    }
+    std::cout << "{ ";
+    for (int i = 0; i < n - 1; ++i)
+    {
+        std::cout << "(" << data[i].key << ": " << data[i].attr << "), ";
+    }
+    std::cout << "(" << data[n - 1].key << ": " << data[n - 1].attr << ") }";
+}
+template <typename K, typename E>
+ListDict<K, E> &ListDict<K, E>::operator=(const ListDict<K, E> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    delete[] data;
+    maxSize = R.maxSize;
+    n = R.n;
+    data = new (std::nothrow) Entry[maxSize];
+    if (data == nullptr)
+    {
+        std::cerr << "malloc memory failed for ListDict.data" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < n; ++i)
+    {
+        data[i] = R.data[i];
+    }
+    return *this;
 }
 #endif
 #endif // DATASTRUCTURE
