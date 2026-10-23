@@ -901,6 +901,36 @@ public:
 
     ListDict<K, E> &operator=(const ListDict<K, E> &R);
 };
+template <typename K, typename E>
+class LinkedDict
+{
+private:
+    typedef struct DictNode
+    {
+        K key;
+        E attr;
+        DictNode *next;
+
+    public:
+        DictNode() : key(), attr(), next(nullptr) {};
+    } DictNode;
+
+    DictNode *first;
+
+public:
+    LinkedDict();
+    LinkedDict(const LinkedDict<K, E> &R);
+    ~LinkedDict();
+
+    void makeEmpty();
+    void Insert(const K &k, const E &e);
+    bool Remove(K k, E &e);
+    bool getAttr(K k, E &e) const;
+    int Length() const;
+    void print() const;
+
+    LinkedDict<K, E> &operator=(const LinkedDict<K, E> &R);
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -929,6 +959,7 @@ public:
 #define DS_LINKEDSET_IMPLEMENTATION
 #define DS_UFSETS_IMPLEMENTATION
 #define DS_LISTDICT_IMPLEMENTATION
+#define DS_LINKEDDICT_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -6178,6 +6209,230 @@ ListDict<K, E> &ListDict<K, E>::operator=(const ListDict<K, E> &R)
     for (int i = 0; i < n; ++i)
     {
         data[i] = R.data[i];
+    }
+    return *this;
+}
+#endif
+#ifdef DS_LINKEDDICT_IMPLEMENTATION
+template <typename K, typename E>
+LinkedDict<K, E>::LinkedDict()
+{
+    first = new (std::nothrow) DictNode;
+    if (first == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedDict.first" << std::endl;
+        exit(1);
+    }
+}
+template <typename K, typename E>
+LinkedDict<K, E>::LinkedDict(const LinkedDict<K, E> &R)
+{
+    first = new (std::nothrow) DictNode;
+    if (first == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedDict.first" << std::endl;
+        exit(1);
+    }
+    DictNode *p = R.first->next, *q = first;
+    while (p != nullptr)
+    {
+        q->next = new (std::nothrow) DictNode;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedDict.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->key = p->key;
+        q->attr = p->attr;
+        p = p->next;
+    }
+}
+template <typename K, typename E>
+LinkedDict<K, E>::~LinkedDict()
+{
+    DictNode *p = first->next;
+    while (p != nullptr)
+    {
+        DictNode *del = p;
+        p = p->next;
+        delete del;
+    }
+    delete first;
+}
+template <typename K, typename E>
+void LinkedDict<K, E>::makeEmpty()
+{
+    DictNode *p = first->next;
+    while (p != nullptr)
+    {
+        DictNode *del = p;
+        p = p->next;
+        delete del;
+    }
+    first->next = nullptr;
+}
+template <typename K, typename E>
+void LinkedDict<K, E>::Insert(const K &k, const E &e)
+{
+    DictNode *p = first->next, *pre = first;
+    while (p != nullptr)
+    {
+        if (p->key >= k)
+        {
+            break;
+        }
+        pre = p;
+        p = p->next;
+    }
+    if (p == nullptr)
+    {
+        pre->next = new (std::nothrow) DictNode;
+        if (pre->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedDict.pre->next" << std::endl;
+            exit(1);
+        }
+        pre = pre->next;
+        pre->key = k;
+        pre->attr = e;
+        return;
+    }
+    else
+    {
+        if (p->key == k)
+        {
+            p->attr = e;
+            return;
+        }
+        else
+        {
+            pre->next = new (std::nothrow) DictNode;
+            if (pre->next == nullptr)
+            {
+                std::cerr << "malloc memory failed for LinkedDict.pre->next" << std::endl;
+                exit(1);
+            }
+            pre = pre->next;
+            pre->key = k;
+            pre->attr = e;
+            pre->next = p;
+        }
+    }
+}
+template <typename K, typename E>
+bool LinkedDict<K, E>::Remove(K k, E &e)
+{
+    DictNode *p = first->next, *pre = first;
+    while (p != nullptr)
+    {
+        if (p->key >= k)
+        {
+            break;
+        }
+        pre = p;
+        p = p->next;
+    }
+    if (p == nullptr)
+    {
+        return false;
+    }
+    else
+    {
+        if (p->key == k)
+        {
+            e = p->attr;
+            pre->next = p->next;
+            delete p;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+template <typename K, typename E>
+bool LinkedDict<K, E>::getAttr(K k, E &e) const
+{
+    DictNode *p = first->next;
+    while (p != nullptr)
+    {
+        if (p->key >= k)
+        {
+            break;
+        }
+        p = p->next;
+    }
+    if (p == nullptr)
+    {
+        return false;
+    }
+    else
+    {
+        if (p->key == k)
+        {
+            e = p->attr;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+template <typename K, typename E>
+int LinkedDict<K, E>::Length() const
+{
+    int l = 0;
+    DictNode *p = first->next;
+    while (p != nullptr)
+    {
+        l++;
+        p = p->next;
+    }
+    return l;
+}
+template <typename K, typename E>
+void LinkedDict<K, E>::print() const
+{
+    std::cout << "{ ";
+    DictNode *p = first->next;
+    while (p != nullptr)
+    {
+        if (p->next == nullptr)
+        {
+            std::cout << "(" << p->key << ": " << p->attr << ")";
+        }
+        else
+        {
+            std::cout << "(" << p->key << ": " << p->attr << "), ";
+        }
+        p = p->next;
+    }
+    std::cout << " }";
+}
+template <typename K, typename E>
+LinkedDict<K, E> &LinkedDict<K, E>::operator=(const LinkedDict<K, E> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    makeEmpty();
+    DictNode *p = R.first->next, *q = first;
+    while (p != nullptr)
+    {
+        q->next = new (std::nothrow) DictNode;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedDict.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->key = p->key;
+        q->attr = p->attr;
+        p = p->next;
     }
     return *this;
 }

@@ -47,6 +47,7 @@ If you want to use all ds and algo:
 24. LinkedSet
 25. UFSets
 26. ListDict
+27. LinkedDict
  
 ## The Algorithms supported now (2026-10-10):
 - String
