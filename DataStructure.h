@@ -796,7 +796,7 @@ public:
     void printTree(std::ostream &os, HuffmanNode *t) const;
 };
 template <typename T>
-class bitSet
+class BitSet
 {
 private:
     int setSize;
@@ -804,9 +804,9 @@ private:
     unsigned short *bitVector;
 
 public:
-    bitSet(int sz = 64);
-    bitSet(const bitSet<T> &R);
-    ~bitSet();
+    BitSet(int sz = 64);
+    BitSet(const BitSet<T> &R);
+    ~BitSet();
 
     int getMember(const T x) const;
     void putMember(const T x, int v);
@@ -815,13 +815,43 @@ public:
     bool addMember(const T x);
     bool delMember(const T x);
     bool Contains(const T x) const;
-    bool subSet(const bitSet<T> &R) const;
+    bool subSet(const BitSet<T> &R) const;
 
-    bool operator==(const bitSet<T> &R) const;
-    bitSet<T> &operator=(const bitSet<T> &R);
-    bitSet<T> operator+(const bitSet<T> &R) const;
-    bitSet<T> operator*(const bitSet<T> &R) const;
-    bitSet<T> operator-(const bitSet<T> &R) const;
+    bool operator==(const BitSet<T> &R) const;
+    BitSet<T> &operator=(const BitSet<T> &R);
+    BitSet<T> operator+(const BitSet<T> &R) const;
+    BitSet<T> operator*(const BitSet<T> &R) const;
+    BitSet<T> operator-(const BitSet<T> &R) const;
+};
+template <typename T>
+class LinkedSet
+{
+    typedef struct SetNode
+    {
+        T data;
+        SetNode *next;
+    } SetNode;
+
+    SetNode *first, *last;
+
+public:
+    LinkedSet();
+    LinkedSet(const LinkedSet<T> &R);
+    ~LinkedSet();
+
+    void makeEmpty();
+    bool addMember(const T &x);
+    bool delMember(const T &x);
+    bool Contains(const T &x) const;
+    bool subSet(const LinkedSet<T> &R) const;
+    bool operator==(const LinkedSet<T> &R) const;
+    bool Min(T &x) const;
+    bool Max(T &x) const;
+
+    LinkedSet<T> &operator=(const LinkedSet<T> &R);
+    LinkedSet<T> &operator+(const LinkedSet<T> &R);
+    LinkedSet<T> &operator*(const LinkedSet<T> &R);
+    LinkedSet<T> &operator-(const LinkedSet<T> &R);
 };
 
 #ifdef DS_IMPLEMENTATION
@@ -848,6 +878,7 @@ public:
 #define DS_MINHEAP_IMPLEMENTATION
 #define DS_HUFFMANTREE_IMPLEMENTATION
 #define DS_BITSET_IMPLEMENTATION
+#define DS_LINKEDSET_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -5246,14 +5277,14 @@ void HuffmanTree<T, E>::printTree(std::ostream &os, HuffmanNode *t) const
 #endif
 #ifdef DS_BITSET_IMPLEMENTATION
 template <typename T>
-bitSet<T>::bitSet(int sz)
+BitSet<T>::BitSet(int sz)
 {
     setSize = sz;
     vectorSize = (sz + 15) / 16;
     bitVector = new (std::nothrow) unsigned short[vectorSize];
     if (bitVector == nullptr)
     {
-        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        std::cerr << "malloc memory failed for BitSet.bitVector" << std::endl;
         exit(1);
     }
     for (int i = 0; i < vectorSize; ++i)
@@ -5262,14 +5293,14 @@ bitSet<T>::bitSet(int sz)
     }
 }
 template <typename T>
-bitSet<T>::bitSet(const bitSet<T> &R)
+BitSet<T>::BitSet(const BitSet<T> &R)
 {
     setSize = R.setSize;
     vectorSize = R.vectorSize;
     bitVector = new (std::nothrow) unsigned short[vectorSize];
     if (bitVector == nullptr)
     {
-        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        std::cerr << "malloc memory failed for BitSet.bitVector" << std::endl;
         exit(1);
     }
     for (int i = 0; i < vectorSize; ++i)
@@ -5278,12 +5309,12 @@ bitSet<T>::bitSet(const bitSet<T> &R)
     }
 }
 template <typename T>
-bitSet<T>::~bitSet()
+BitSet<T>::~BitSet()
 {
     delete[] bitVector;
 }
 template <typename T>
-int bitSet<T>::getMember(const T x) const
+int BitSet<T>::getMember(const T x) const
 {
     if (x > setSize - 1 || x < 0)
     {
@@ -5293,7 +5324,7 @@ int bitSet<T>::getMember(const T x) const
     return (bitVector[x >> 4] >> ((-x) & 15)) & 1;
 }
 template <typename T>
-void bitSet<T>::putMember(const T x, int v)
+void BitSet<T>::putMember(const T x, int v)
 {
     if (x > setSize - 1 || x < 0)
     {
@@ -5316,7 +5347,7 @@ void bitSet<T>::putMember(const T x, int v)
     }
 }
 template <typename T>
-void bitSet<T>::makeEmpty()
+void BitSet<T>::makeEmpty()
 {
     for (int i = 0; i < vectorSize; ++i)
     {
@@ -5324,7 +5355,7 @@ void bitSet<T>::makeEmpty()
     }
 }
 template <typename T>
-bool bitSet<T>::addMember(const T x)
+bool BitSet<T>::addMember(const T x)
 {
     if (x > setSize - 1 || x < 0)
     {
@@ -5339,7 +5370,7 @@ bool bitSet<T>::addMember(const T x)
     return true;
 }
 template <typename T>
-bool bitSet<T>::delMember(const T x)
+bool BitSet<T>::delMember(const T x)
 {
     if (x > setSize - 1 || x < 0)
     {
@@ -5354,7 +5385,7 @@ bool bitSet<T>::delMember(const T x)
     return true;
 }
 template <typename T>
-bool bitSet<T>::Contains(const T x) const
+bool BitSet<T>::Contains(const T x) const
 {
     if (x > setSize - 1 || x < 0)
     {
@@ -5371,7 +5402,7 @@ bool bitSet<T>::Contains(const T x) const
     }
 }
 template <typename T>
-bool bitSet<T>::subSet(const bitSet<T> &R) const
+bool BitSet<T>::subSet(const BitSet<T> &R) const
 {
     if (setSize != R.setSize)
     {
@@ -5387,7 +5418,7 @@ bool bitSet<T>::subSet(const bitSet<T> &R) const
     return true;
 }
 template <typename T>
-bool bitSet<T>::operator==(const bitSet<T> &R) const
+bool BitSet<T>::operator==(const BitSet<T> &R) const
 {
     if (setSize != R.setSize)
     {
@@ -5403,7 +5434,7 @@ bool bitSet<T>::operator==(const bitSet<T> &R) const
     return true;
 }
 template <typename T>
-bitSet<T> &bitSet<T>::operator=(const bitSet<T> &R)
+BitSet<T> &BitSet<T>::operator=(const BitSet<T> &R)
 {
     if (this == &R)
     {
@@ -5415,7 +5446,7 @@ bitSet<T> &bitSet<T>::operator=(const bitSet<T> &R)
     bitVector = new (std::nothrow) unsigned short[vectorSize];
     if (bitVector == nullptr)
     {
-        std::cerr << "malloc memory failed for bitSet.bitVector" << std::endl;
+        std::cerr << "malloc memory failed for BitSet.bitVector" << std::endl;
         exit(1);
     }
     for (int i = 0; i < vectorSize; ++i)
@@ -5425,14 +5456,14 @@ bitSet<T> &bitSet<T>::operator=(const bitSet<T> &R)
     return *this;
 }
 template <typename T>
-bitSet<T> bitSet<T>::operator+(const bitSet<T> &R) const
+BitSet<T> BitSet<T>::operator+(const BitSet<T> &R) const
 {
     if (setSize != R.setSize)
     {
         std::cerr << "The size of Sets must be the same, +() failed" << std::endl;
         exit(1);
     }
-    bitSet<T> result(setSize);
+    BitSet<T> result(setSize);
     for (int i = 0; i < vectorSize; ++i)
     {
         result.bitVector[i] = bitVector[i] | R.bitVector[i];
@@ -5440,14 +5471,14 @@ bitSet<T> bitSet<T>::operator+(const bitSet<T> &R) const
     return result;
 }
 template <typename T>
-bitSet<T> bitSet<T>::operator*(const bitSet<T> &R) const
+BitSet<T> BitSet<T>::operator*(const BitSet<T> &R) const
 {
     if (setSize != R.setSize)
     {
         std::cerr << "The size of Sets must be the same, *() failed" << std::endl;
         exit(1);
     }
-    bitSet<T> result(setSize);
+    BitSet<T> result(setSize);
     for (int i = 0; i < vectorSize; ++i)
     {
         result.bitVector[i] = bitVector[i] & R.bitVector[i];
@@ -5455,19 +5486,366 @@ bitSet<T> bitSet<T>::operator*(const bitSet<T> &R) const
     return result;
 }
 template <typename T>
-bitSet<T> bitSet<T>::operator-(const bitSet<T> &R) const
+BitSet<T> BitSet<T>::operator-(const BitSet<T> &R) const
 {
     if (setSize != R.setSize)
     {
         std::cerr << "The size of Sets must be the same, -() failed" << std::endl;
         exit(1);
     }
-    bitSet<T> result(setSize);
+    BitSet<T> result(setSize);
     for (int i = 0; i < vectorSize; ++i)
     {
         result.bitVector[i] = bitVector[i] & ~(R.bitVector[i]);
     }
     return result;
+}
+#endif
+#ifdef DS_LINKEDSET_IMPLEMENTATION
+template <typename T>
+LinkedSet<T>::LinkedSet()
+{
+    first = last = new (std::nothrow) SetNode;
+    if (first == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedSet.first" << std::endl;
+        exit(1);
+    }
+    first->next = nullptr;
+}
+template <typename T>
+LinkedSet<T>::LinkedSet(const LinkedSet<T> &R)
+{
+    first = last = new (std::nothrow) SetNode;
+    if (first == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedSet.first" << std::endl;
+        exit(1);
+    }
+    first->next = nullptr;
+    SetNode *p = R.first->next, *q = first;
+    while (p != nullptr)
+    {
+        q->next = new (std::nothrow) SetNode;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedSet.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        q->next = nullptr;
+        last = q;
+        p = p->next;
+    }
+}
+template <typename T>
+LinkedSet<T>::~LinkedSet()
+{
+    SetNode *p = first->next, *del = nullptr;
+    while (p != nullptr)
+    {
+        del = p;
+        p = p->next;
+        delete del;
+    }
+    delete first;
+}
+template <typename T>
+void LinkedSet<T>::makeEmpty()
+{
+    SetNode *p = first->next, *del = nullptr;
+    while (p != nullptr)
+    {
+        del = p;
+        p = p->next;
+        delete del;
+    }
+    last = first;
+    first->next = nullptr;
+}
+template <typename T>
+bool LinkedSet<T>::addMember(const T &x)
+{
+    SetNode *p = first->next, *pre = first;
+    while (p != nullptr && p->data < x)
+    {
+        pre = p;
+        p = p->next;
+    }
+    if (p != nullptr && p->data == x)
+    {
+        return false;
+    }
+    SetNode *node = new (std::nothrow) SetNode;
+    if (node == nullptr)
+    {
+        std::cerr << "malloc memory failed for LinkedSet.node" << std::endl;
+        exit(1);
+    }
+    pre->next = node;
+    node->data = x;
+    node->next = p;
+    if (pre == last)
+    {
+        last = node;
+    }
+    return true;
+}
+template <typename T>
+bool LinkedSet<T>::delMember(const T &x)
+{
+    SetNode *p = first->next, *pre = first;
+    while (p != nullptr && p->data < x)
+    {
+        pre = p;
+        p = p->next;
+    }
+    if (p == nullptr || p->data != x)
+    {
+        return false;
+    }
+    pre->next = p->next;
+    if (p == last)
+    {
+        last = pre;
+    }
+    delete p;
+    return true;
+}
+template <typename T>
+bool LinkedSet<T>::Contains(const T &x) const
+{
+    SetNode *p = first->next;
+    while (p != nullptr && p->data < x)
+    {
+        p = p->next;
+    }
+    return p != nullptr && p->data == x;
+}
+template <typename T>
+bool LinkedSet<T>::subSet(const LinkedSet<T> &R) const
+{
+    SetNode *p = first->next, *q = R.first->next;
+    while (p != nullptr)
+    {
+        while (q != nullptr && q->data < p->data)
+        {
+            q = q->next;
+        }
+        if (q != nullptr)
+        {
+            if (q->data > p->data)
+            {
+                return false;
+            }
+            p = p->next;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}
+template <typename T>
+bool LinkedSet<T>::operator==(const LinkedSet<T> &R) const
+{
+    SetNode *p = first->next, *q = R.first->next;
+    while (p != nullptr && q != nullptr)
+    {
+        if (p->data != q->data)
+        {
+            return false;
+        }
+        p = p->next;
+        q = q->next;
+    }
+    return p == nullptr && q == nullptr;
+}
+template <typename T>
+bool LinkedSet<T>::Min(T &x) const
+{
+    if (first->next == nullptr)
+    {
+        std::cout << "Set is empty, Min() failed" << std::endl;
+        return false;
+    }
+    x = first->next->data;
+    return true;
+}
+template <typename T>
+bool LinkedSet<T>::Max(T &x) const
+{
+    if (first->next == nullptr)
+    {
+        std::cout << "Set is empty, Max() failed" << std::endl;
+        return false;
+    }
+    x = last->data;
+    return true;
+}
+template <typename T>
+LinkedSet<T> &LinkedSet<T>::operator=(const LinkedSet<T> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    makeEmpty();
+    SetNode *p = R.first->next, *q = first;
+    while (p != nullptr)
+    {
+        q->next = new (std::nothrow) SetNode;
+        if (q->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedSet.q->next" << std::endl;
+            exit(1);
+        }
+        q = q->next;
+        q->data = p->data;
+        q->next = nullptr;
+        last = q;
+        p = p->next;
+    }
+    return *this;
+}
+template <typename T>
+LinkedSet<T> &LinkedSet<T>::operator+(const LinkedSet<T> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    SetNode *pa = first->next, *pb = R.first->next, *pc = first;
+    while (pa != nullptr && pb != nullptr)
+    {
+        if (pa->data < pb->data)
+        {
+            pc->next = pa;
+            pa = pa->next;
+            pc = pc->next;
+        }
+        else if (pa->data > pb->data)
+        {
+            pc->next = new (std::nothrow) SetNode;
+            if (pc->next == nullptr)
+            {
+                std::cerr << "malloc memory failed for LinkedSet.pc->next" << std::endl;
+                exit(1);
+            }
+            pc = pc->next;
+            pc->data = pb->data;
+            pc->next = nullptr;
+            pb = pb->next;
+        }
+        else
+        {
+            pc->next = pa;
+            pa = pa->next;
+            pb = pb->next;
+            pc = pc->next;
+        }
+    }
+    while (pa != nullptr)
+    {
+        pc->next = pa;
+        pa = pa->next;
+        pc = pc->next;
+    }
+    while (pb != nullptr)
+    {
+        pc->next = new (std::nothrow) SetNode;
+        if (pc->next == nullptr)
+        {
+            std::cerr << "malloc memory failed for LinkedSet.pc->next" << std::endl;
+            exit(1);
+        }
+        pc = pc->next;
+        pc->data = pb->data;
+        pc->next = nullptr;
+        pb = pb->next;
+    }
+    pc->next = nullptr;
+    last = pc;
+    return *this;
+}
+template <typename T>
+LinkedSet<T> &LinkedSet<T>::operator*(const LinkedSet<T> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    SetNode *pa = first->next, *pb = R.first->next, *pc = first;
+    while (pa != nullptr && pb != nullptr)
+    {
+        if (pa->data < pb->data)
+        {
+            SetNode *del = pa;
+            pa = pa->next;
+            delete del;
+        }
+        else if (pa->data > pb->data)
+        {
+            pb = pb->next;
+        }
+        else
+        {
+            pc->next = pa;
+            pa = pa->next;
+            pb = pb->next;
+            pc = pc->next;
+        }
+    }
+    while (pa != nullptr)
+    {
+        SetNode *del = pa;
+        pa = pa->next;
+        delete del;
+    }
+    pc->next = nullptr;
+    last = pc;
+    return *this;
+}
+template <typename T>
+LinkedSet<T> &LinkedSet<T>::operator-(const LinkedSet<T> &R)
+{
+    if (this == &R)
+    {
+        makeEmpty();
+        return *this;
+    }
+    SetNode *pa = first->next, *pb = R.first->next, *pc = first;
+    while (pa != nullptr && pb != nullptr)
+    {
+        if (pa->data < pb->data)
+        {
+            pc->next = pa;
+            pa = pa->next;
+            pc = pc->next;
+        }
+        else if (pa->data > pb->data)
+        {
+            pb = pb->next;
+        }
+        else
+        {
+            SetNode *del = pa;
+            pa = pa->next;
+            delete del;
+            pb = pb->next;
+        }
+    }
+    while (pa != nullptr)
+    {
+        pc->next = pa;
+        pa = pa->next;
+        pc = pc->next;
+    }
+    pc->next = nullptr;
+    last = pc;
+    return *this;
 }
 #endif
 #endif // DATASTRUCTURE
