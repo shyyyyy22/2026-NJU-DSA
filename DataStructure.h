@@ -770,6 +770,31 @@ public:
     bool IsFull() const;
     void MakeEmpty();
 };
+template <typename T, typename E>
+class HuffmanTree
+{
+private:
+    typedef struct HuffmanNode
+    {
+        E data;
+        T weight;
+        HuffmanNode *leftChild, *rightChild, *parent;
+
+    public:
+        HuffmanNode() : data(), weight(), leftChild(nullptr), rightChild(nullptr), parent(nullptr) {};
+    } HuffmanNode;
+
+    HuffmanNode *root;
+
+    void deleteTree(HuffmanNode *t);
+
+public:
+    HuffmanTree(T w[], E d[], int n);
+    ~HuffmanTree();
+
+    HuffmanNode *getRoot() const;
+    void printTree(std::ostream &os, HuffmanNode *t) const;
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -793,6 +818,7 @@ public:
 #define DS_THREADTREE_IMPLEMENTATION
 #define DS_TREE_IMPLEMENTATION
 #define DS_MINHEAP_IMPLEMENTATION
+#define DS_HUFFMANTREE_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -801,6 +827,9 @@ public:
 #endif
 #ifdef DS_TREE_IMPLEMENTATION
 #define DS_LINKEDQUEUE_IMPLEMENTATION
+#endif
+#ifdef DS_HUFFMANTREE_IMPLEMENTATION
+#define DS_MINHEAP_IMPLEMENTATIOn
 #endif
 
 #ifdef DS_SEQLIST_IMPLEMENTATION
@@ -5083,6 +5112,107 @@ template <typename T, typename E>
 void MinHeap<T, E>::MakeEmpty()
 {
     currentSize = 0;
+}
+#endif
+#ifdef DS_HUFFMANTREE_IMPLEMENTATION
+template <typename T, typename E>
+void HuffmanTree<T, E>::deleteTree(HuffmanNode *t)
+{
+    if (t != nullptr)
+    {
+        deleteTree(t->leftChild);
+        deleteTree(t->rightChild);
+        delete t;
+    }
+}
+template <typename T, typename E>
+HuffmanTree<T, E>::HuffmanTree(T w[], E d[], int n)
+{
+    if (n == 0)
+    {
+        root = nullptr;
+        return;
+    }
+    MinHeap<T, HuffmanNode *> hp(2 * n - 1);
+    HuffmanNode *parent;
+    Element<T, HuffmanNode *> first, second;
+    for (int i = 0; i < n; ++i)
+    {
+        HuffmanNode *node = new (std::nothrow) HuffmanNode;
+        if (node == nullptr)
+        {
+            std::cerr << "malloc memory failed for HuffmanTree.node" << std::endl;
+            exit(1);
+        }
+        node->weight = w[i];
+        node->data = d[i];
+        node->leftChild = node->parent = node->rightChild = nullptr;
+        Element<T, HuffmanNode *> elem;
+        elem.key = w[i];
+        elem.other = node;
+        hp.Insert(elem);
+    }
+    for (int i = 0; i < n - 1; ++i)
+    {
+        hp.Remove(first);
+        hp.Remove(second);
+        parent = new (std::nothrow) HuffmanNode;
+        if (parent == nullptr)
+        {
+            std::cerr << "malloc memory failed for HuffmanTree.parent" << std::endl;
+            exit(1);
+        }
+        parent->weight = first.key + second.key;
+        parent->leftChild = first.other;
+        parent->rightChild = second.other;
+        parent->parent = nullptr;
+        first.other->parent = parent;
+        second.other->parent = parent;
+        Element<T, HuffmanNode *> elem;
+        elem.key = parent->weight;
+        elem.other = parent;
+        hp.Insert(elem);
+        root = parent;
+    }
+    if (n == 1)
+    {
+        Element<T, HuffmanNode *> last;
+        hp.Remove(last);
+        root = last.other;
+    }
+}
+template <typename T, typename E>
+HuffmanTree<T, E>::~HuffmanTree()
+{
+    deleteTree(root);
+}
+template <typename T, typename E>
+typename HuffmanTree<T, E>::HuffmanNode *HuffmanTree<T, E>::getRoot() const
+{
+    return root;
+}
+template <typename T, typename E>
+void HuffmanTree<T, E>::printTree(std::ostream &os, HuffmanNode *t) const
+{
+    if (t != nullptr)
+    {
+        if (t->leftChild == nullptr && t->rightChild == nullptr)
+        {
+            os << t->data << ":" << t->weight;
+        }
+        else
+        {
+            os << t->weight;
+        }
+        if (t->leftChild != nullptr || t->rightChild != nullptr)
+        {
+            os << "(";
+            printTree(os, t->leftChild);
+            os << ",";
+            printTree(os, t->rightChild);
+            os << ")";
+        }
+    }
 }
 #endif
 #endif // DATASTRUCTURE
