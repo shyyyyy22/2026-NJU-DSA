@@ -853,6 +853,22 @@ public:
     LinkedSet<T> &operator*(const LinkedSet<T> &R);
     LinkedSet<T> &operator-(const LinkedSet<T> &R);
 };
+class UFSets
+{
+private:
+    int *parent;
+    int size;
+
+public:
+    UFSets(int sz = 10);
+    ~UFSets();
+    UFSets &operator=(const UFSets &R);
+
+    void Union(int Root1, int Root2);
+    int Find(int x);
+    void WeightedUnion(int Root1, int Root2);
+    int CollapsingFind(int x);
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -879,6 +895,7 @@ public:
 #define DS_HUFFMANTREE_IMPLEMENTATION
 #define DS_BITSET_IMPLEMENTATION
 #define DS_LINKEDSET_IMPLEMENTATION
+#define DS_UFSETS_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -5846,6 +5863,87 @@ LinkedSet<T> &LinkedSet<T>::operator-(const LinkedSet<T> &R)
     pc->next = nullptr;
     last = pc;
     return *this;
+}
+#endif
+#ifdef DS_UFSETS_IMPLEMENTATION
+UFSets::UFSets(int sz)
+{
+    size = sz;
+    parent = new (std::nothrow) int[sz];
+    if (parent == nullptr)
+    {
+        std::cerr << "malloc memory failed for UFSets.parent" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < size; ++i)
+    {
+        parent[i] = -1;
+    }
+}
+UFSets::~UFSets()
+{
+    delete[] parent;
+}
+UFSets &UFSets::operator=(const UFSets &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    delete[] parent;
+    size = R.size;
+    parent = new (std::nothrow) int[size];
+    if (parent == nullptr)
+    {
+        std::cerr << "malloc memory failed for UFSets.parent" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < size; ++i)
+    {
+        parent[i] = R.parent[i];
+    }
+    return *this;
+}
+void UFSets::Union(int Root1, int Root2)
+{
+    parent[Root1] += parent[Root2];
+    parent[Root2] = Root1;
+}
+int UFSets::Find(int x)
+{
+    while (parent[x] >= 0)
+    {
+        x = parent[x];
+    }
+    return x;
+}
+void UFSets::WeightedUnion(int Root1, int Root2)
+{
+    if (parent[Root1] < parent[Root2])
+    {
+        parent[Root1] += parent[Root2];
+        parent[Root2] = Root1;
+    }
+    else
+    {
+        parent[Root2] += parent[Root1];
+        parent[Root1] = Root2;
+    }
+}
+int UFSets::CollapsingFind(int x)
+{
+    int pr = x;
+    while (parent[pr] >= 0)
+    {
+        pr = parent[pr];
+    }
+    while (parent[x] >= 0)
+    {
+        int temp = parent[x];
+        parent[x] = pr;
+        x = temp;
+    }
+    return pr;
 }
 #endif
 #endif // DATASTRUCTURE

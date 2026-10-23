@@ -45,6 +45,7 @@ If you want to use all ds and algo:
 22. HuffmanTree
 23. BitSet
 24. LinkedSet
+25. UFSets
  
 ## The Algorithms supported now (2026-10-10):
 - String
