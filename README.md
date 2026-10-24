@@ -49,6 +49,7 @@ If you want to use all ds and algo:
 26. ListDict
 27. LinkedDict
 28. HashTable
+29. ChainedHash
  
 ## The Algorithms supported now (2026-10-10):
 - String

@@ -971,6 +971,37 @@ public:
 
     HashTable<K, E> &operator=(const HashTable<K, E> &R);
 };
+template <typename K, typename E>
+class ChainedHash
+{
+private:
+    typedef struct HashNode
+    {
+        K key;
+        E attr;
+        HashNode *next;
+
+    public:
+        HashNode() : key(), attr(), next(nullptr) {};
+    } HashNode;
+    HashNode **buckets;
+    int m;
+    int size;
+
+    int hashFunc(const K &k) const;
+
+public:
+    ChainedHash(int sz = 31);
+    ChainedHash(const ChainedHash<K, E> &R);
+    ~ChainedHash();
+
+    bool Insert(const K &k, const E &e);
+    bool Remove(const K &k, E &e);
+    bool getAttr(const K &k, E &e) const;
+    int Length() const;
+
+    ChainedHash<K, E> &operator=(const ChainedHash<K, E> &R);
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -1001,6 +1032,7 @@ public:
 #define DS_LISTDICT_IMPLEMENTATION
 #define DS_LINKEDDICT_IMPLEMENTATION
 #define DS_HASHTABLE_IMPLEMENTATION
+#define DS_CHAINEDHASH_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -6674,6 +6706,205 @@ HashTable<K, E> &HashTable<K, E>::operator=(const HashTable<K, E> &R)
     for (int i = 0; i < m; ++i)
     {
         table[i] = R.table[i];
+    }
+    return *this;
+}
+#endif
+#ifdef DS_CHAINEDHASH_IMPLEMENTATION
+template <typename K, typename E>
+int ChainedHash<K, E>::hashFunc(const K &k) const
+{
+    return k % m;
+}
+template <typename K, typename E>
+ChainedHash<K, E>::ChainedHash(int sz)
+{
+    m = sz;
+    size = 0;
+    buckets = new (std::nothrow) HashNode *[sz];
+    if (buckets == nullptr)
+    {
+        std::cerr << "malloc memory failed for Chainedhash.buckets" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        buckets[i] = new (std::nothrow) HashNode;
+        if (buckets[i] == nullptr)
+        {
+            std::cerr << "malloc memory failed for Chainedhash.buckets[i]" << std::endl;
+            exit(1);
+        }
+    }
+}
+template <typename K, typename E>
+ChainedHash<K, E>::ChainedHash(const ChainedHash<K, E> &R)
+{
+    m = R.m;
+    size = R.size;
+    buckets = new (std::nothrow) HashNode *[m];
+    if (buckets == nullptr)
+    {
+        std::cerr << "malloc memory failed for Chainedhash.buckets" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        buckets[i] = new (std::nothrow) HashNode;
+        if (buckets[i] == nullptr)
+        {
+            std::cerr << "malloc memory failed for Chainedhash.buckets[i]" << std::endl;
+            exit(1);
+        }
+        HashNode *p = R.buckets[i]->next, *q = buckets[i];
+        while (p != nullptr)
+        {
+            q->next = new (std::nothrow) HashNode;
+            if (q->next == nullptr)
+            {
+                std::cerr << "malloc memory failed for Chainedhash.q->next" << std::endl;
+                exit(1);
+            }
+            q = q->next;
+            q->key = p->key;
+            q->attr = p->attr;
+            p = p->next;
+        }
+    }
+}
+template <typename K, typename E>
+ChainedHash<K, E>::~ChainedHash()
+{
+    for (int i = 0; i < m; ++i)
+    {
+        HashNode *p = buckets[i]->next, *del = nullptr;
+        while (p != nullptr)
+        {
+            del = p;
+            p = p->next;
+            delete del;
+        }
+        delete buckets[i];
+    }
+    delete[] buckets;
+}
+template <typename K, typename E>
+bool ChainedHash<K, E>::Insert(const K &k, const E &e)
+{
+    int h = hashFunc(k);
+    HashNode *p = buckets[h]->next;
+    while (p != nullptr)
+    {
+        if (p->key == k)
+        {
+            p->attr = e;
+            return true;
+        }
+        p = p->next;
+    }
+    HashNode *node = new (std::nothrow) HashNode;
+    if (node == nullptr)
+    {
+        std::cerr << "malloc memory failed for ChainedHash.node" << std::endl;
+        exit(1);
+    }
+    node->key = k;
+    node->attr = e;
+    node->next = buckets[h]->next;
+    buckets[h]->next = node;
+    size++;
+    return true;
+}
+template <typename K, typename E>
+bool ChainedHash<K, E>::Remove(const K &k, E &e)
+{
+    int h = hashFunc(k);
+    HashNode *p = buckets[h]->next, *pre = buckets[h];
+    while (p != nullptr)
+    {
+        if (p->key == k)
+        {
+            e = p->attr;
+            pre->next = p->next;
+            delete p;
+            size--;
+            return true;
+        }
+        pre = p;
+        p = p->next;
+    }
+    return false;
+}
+template <typename K, typename E>
+bool ChainedHash<K, E>::getAttr(const K &k, E &e) const
+{
+    int h = hashFunc(k);
+    HashNode *p = buckets[h]->next;
+    while (p != nullptr)
+    {
+        if (p->key == k)
+        {
+            e = p->attr;
+            return true;
+        }
+        p = p->next;
+    }
+    return false;
+}
+template <typename K, typename E>
+int ChainedHash<K, E>::Length() const
+{
+    return size;
+}
+template <typename K, typename E>
+ChainedHash<K, E> &ChainedHash<K, E>::operator=(const ChainedHash<K, E> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        HashNode *p = buckets[i]->next, *del = nullptr;
+        while (p != nullptr)
+        {
+            del = p;
+            p = p->next;
+            delete del;
+        }
+        delete buckets[i];
+    }
+    delete[] buckets;
+    m = R.m;
+    size = R.size;
+    buckets = new (std::nothrow) HashNode *[m];
+    if (buckets == nullptr)
+    {
+        std::cerr << "malloc memory failed for Chainedhash.buckets" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        buckets[i] = new (std::nothrow) HashNode;
+        if (buckets[i] == nullptr)
+        {
+            std::cerr << "malloc memory failed for Chainedhash.buckets[i]" << std::endl;
+            exit(1);
+        }
+        HashNode *p = R.buckets[i]->next, *q = buckets[i];
+        while (p != nullptr)
+        {
+            q->next = new (std::nothrow) HashNode;
+            if (q->next == nullptr)
+            {
+                std::cerr << "malloc memory failed for Chainedhash.q->next" << std::endl;
+                exit(1);
+            }
+            q = q->next;
+            q->key = p->key;
+            q->attr = p->attr;
+            p = p->next;
+        }
     }
     return *this;
 }
