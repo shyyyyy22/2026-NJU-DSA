@@ -931,6 +931,46 @@ public:
 
     LinkedDict<K, E> &operator=(const LinkedDict<K, E> &R);
 };
+template <typename K, typename E>
+class HashTable
+{
+private:
+    enum State
+    {
+        EMPTY,
+        OCCUPIED,
+        DELETED
+    };
+    typedef struct Slot
+    {
+        K key;
+        E attr;
+        State state;
+
+    public:
+        Slot() : key(), attr(), state(EMPTY) {};
+    } Slot;
+    Slot *table;
+    int m;
+    int size;
+
+    int hashFunc(const K &k) const;
+    int probe(int h0, int i) const;
+    bool isPrime(int n) const;
+    int nextPrime(int n) const;
+
+public:
+    HashTable(int sz = 31);
+    HashTable(const HashTable<K, E> &R);
+    ~HashTable();
+
+    bool Insert(const K &k, const E &e);
+    bool Remove(const K &k, E &e);
+    bool getAttr(const K &k, E &e) const;
+    int Length() const;
+
+    HashTable<K, E> &operator=(const HashTable<K, E> &R);
+};
 
 #ifdef DS_IMPLEMENTATION
 #define DS_SEQLIST_IMPLEMENTATION
@@ -960,6 +1000,7 @@ public:
 #define DS_UFSETS_IMPLEMENTATION
 #define DS_LISTDICT_IMPLEMENTATION
 #define DS_LINKEDDICT_IMPLEMENTATION
+#define DS_HASHTABLE_IMPLEMENTATION
 #endif
 
 #ifdef DS_BINARYTREE_IMPLEMENTATION
@@ -6433,6 +6474,206 @@ LinkedDict<K, E> &LinkedDict<K, E>::operator=(const LinkedDict<K, E> &R)
         q->key = p->key;
         q->attr = p->attr;
         p = p->next;
+    }
+    return *this;
+}
+#endif
+#ifdef DS_HASHTABLE_IMPLEMENTATION
+template <typename K, typename E>
+int HashTable<K, E>::hashFunc(const K &k) const
+{
+    return k % m;
+}
+template <typename K, typename E>
+int HashTable<K, E>::probe(int h0, int i) const
+{
+    return (h0 + i) % m;
+}
+template <typename K, typename E>
+bool HashTable<K, E>::isPrime(int n) const
+{
+    if (n < 2)
+    {
+        return false;
+    }
+    if (n < 4)
+    {
+        return true;
+    }
+    for (int i = 2; i * i <= n; ++i)
+    {
+        if (n % i == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+template <typename K, typename E>
+int HashTable<K, E>::nextPrime(int n) const
+{
+    while (!isPrime(n))
+    {
+        n++;
+    }
+    return n;
+}
+template <typename K, typename E>
+HashTable<K, E>::HashTable(int sz)
+{
+    m = nextPrime(sz);
+    size = 0;
+    table = new (std::nothrow) Slot[m];
+    if (table == nullptr)
+    {
+        std::cerr << "malloc memory failed for HashTable.table" << std::endl;
+        exit(1);
+    }
+}
+template <typename K, typename E>
+HashTable<K, E>::HashTable(const HashTable<K, E> &R)
+{
+    m = R.m;
+    size = R.size;
+    table = new (std::nothrow) Slot[m];
+    if (table == nullptr)
+    {
+        std::cerr << "malloc memory failed for HashTable.table" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        table[i] = R.table[i];
+    }
+}
+template <typename K, typename E>
+HashTable<K, E>::~HashTable()
+{
+    delete[] table;
+}
+template <typename K, typename E>
+bool HashTable<K, E>::Insert(const K &k, const E &e)
+{
+    if (size == m)
+    {
+        int h0 = hashFunc(k);
+        for (int i = 0; i < m; ++i)
+        {
+            int h = probe(h0, i);
+            if (table[h].state == OCCUPIED)
+            {
+                if (table[h].key == k)
+                {
+                    table[h].attr = e;
+                    return true;
+                }
+            }
+        }
+        std::cerr << "HashTable is full, Insert() failed" << std::endl;
+        return false;
+    }
+    int h0 = hashFunc(k), h = 0;
+    int first = -1;
+    for (int i = 0; i < m; ++i)
+    {
+        h = probe(h0, i);
+        if (table[h].state == OCCUPIED)
+        {
+            if (table[h].key == k)
+            {
+                table[h].attr = e;
+                return true;
+            }
+        }
+        else if (table[h].state == DELETED)
+        {
+            if (first == -1)
+            {
+                first = h;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    int pos = first != -1 ? first : h;
+    table[pos].key = k;
+    table[pos].attr = e;
+    table[pos].state = OCCUPIED;
+    size++;
+    return true;
+}
+template <typename K, typename E>
+bool HashTable<K, E>::Remove(const K &k, E &e)
+{
+    int h0 = hashFunc(k);
+    for (int i = 0; i < m; ++i)
+    {
+        int h = probe(h0, i);
+        if (table[h].state == OCCUPIED)
+        {
+            if (table[h].key == k)
+            {
+                e = table[h].attr;
+                table[h].state = DELETED;
+                size--;
+                return true;
+            }
+        }
+        else if (table[h].state == EMPTY)
+        {
+            return false;
+        }
+    }
+    return false;
+}
+template <typename K, typename E>
+bool HashTable<K, E>::getAttr(const K &k, E &e) const
+{
+    int h0 = hashFunc(k);
+    for (int i = 0; i < m; ++i)
+    {
+        int h = probe(h0, i);
+        if (table[h].state == OCCUPIED)
+        {
+            if (table[h].key == k)
+            {
+                e = table[h].attr;
+                return true;
+            }
+        }
+        else if (table[h].state == EMPTY)
+        {
+            return false;
+        }
+    }
+    return false;
+}
+template <typename K, typename E>
+int HashTable<K, E>::Length() const
+{
+    return size;
+}
+template <typename K, typename E>
+HashTable<K, E> &HashTable<K, E>::operator=(const HashTable<K, E> &R)
+{
+    if (this == &R)
+    {
+        return *this;
+    }
+    delete[] table;
+    m = R.m;
+    size = R.size;
+    table = new (std::nothrow) Slot[m];
+    if (table == nullptr)
+    {
+        std::cerr << "malloc memory failed for HashTable.table" << std::endl;
+        exit(1);
+    }
+    for (int i = 0; i < m; ++i)
+    {
+        table[i] = R.table[i];
     }
     return *this;
 }
